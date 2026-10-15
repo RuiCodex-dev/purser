@@ -1,0 +1,14 @@
+node_modules/
+web/dist/
+data/
+.env
+.env.*
+!.env.example
+*.log
+video/work/
+video/*.mp4
+video/hyperframes/renders/
+video/hyperframes/assets/clips/
+design/gen/
+coverage/
+.DS_Store
