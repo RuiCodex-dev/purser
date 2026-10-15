@@ -1,0 +1,113 @@
+{
+  "environment": "PayPal sandbox",
+  "base": "https://api-m.sandbox.paypal.com",
+  "toolkit": "1.11.0",
+  "evidence": [
+    {
+      "step": "Toolkit create_order",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null,
+      "order": "06W85166HE871352Y",
+      "status": "PAYER_ACTION_REQUIRED",
+      "approveLink": true
+    },
+    {
+      "step": "Toolkit get_order",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null,
+      "status": "PAYER_ACTION_REQUIRED",
+      "amount": {
+        "currency_code": "USD",
+        "value": "2.00",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "2.50"
+          },
+          "shipping": {
+            "currency_code": "USD",
+            "value": "0.00"
+          },
+          "tax_total": {
+            "currency_code": "USD",
+            "value": "0.00"
+          },
+          "discount": {
+            "currency_code": "USD",
+            "value": "0.50"
+          }
+        }
+      }
+    },
+    {
+      "step": "Toolkit create_invoice",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null,
+      "invoice": "INV2-42NG-LVSL-2D3C-K9WS"
+    },
+    {
+      "step": "Toolkit send_invoice",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null,
+      "payerView": true
+    },
+    {
+      "step": "Toolkit send_invoice_reminder",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null
+    },
+    {
+      "step": "Toolkit get_invoice",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null,
+      "status": "SENT"
+    },
+    {
+      "step": "Payouts v1 create",
+      "ok": true,
+      "http": 201,
+      "debugId": "ca4b1c1a619b0",
+      "error": null,
+      "batch": "6LQZDWJCD4CXL",
+      "status": "PENDING"
+    },
+    {
+      "step": "Payouts v1 get",
+      "ok": true,
+      "http": 200,
+      "debugId": "ca4b1c1c1ac0f",
+      "error": null,
+      "status": "PENDING",
+      "item": "PENDING"
+    },
+    {
+      "step": "Toolkit list_transactions",
+      "ok": true,
+      "http": 200,
+      "debugId": null,
+      "error": null,
+      "count": 1
+    },
+    {
+      "step": "Webhook verification configured",
+      "value": "no PAYPAL_WEBHOOK_ID set",
+      "result": "NO_WEBHOOK_ID"
+    },
+    {
+      "step": "elapsed",
+      "ms": 9933
+    }
+  ]
+}
