@@ -109,7 +109,7 @@ label.f { display: grid; gap: 4px; font-size: 12px; color: var(--fog); font-weig
 .cell-id { font-size: 12px; font-weight: 500; letter-spacing: .02em; color: var(--fog); }
 .waiting-list { margin-top: 12px; border-top: 1px dashed var(--rule); padding-top: 10px; font-size: 13px; }
 .waiting-list div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
-.grid { height: 420px; width: 100%; }
+.grid { height: 470px; width: 100%; }
 .grid.short { height: 330px; }
 .ag-theme-purser .ag-cell-data-changed, .ag-cell-data-changed { background-color: #CFE5DE !important; transition: background-color .2s; }
 .ag-cell-data-changed-animation { background-color: transparent !important; transition: background-color .6s; }

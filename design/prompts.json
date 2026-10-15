@@ -1,0 +1,11 @@
+{
+  "style": "Two-colour risograph print: deep navy ink and warm brass-ochre ink on uncoated cream paper. Flat overlapping shapes, visible paper grain and fine halftone dots, slight misregistration between the two inks, limited palette of navy, ochre and paper only, no gradients, no 3D render, no glossy surfaces, quiet editorial illustration with generous empty space. Absolutely no text, no letters, no numbers, no words, no logos, no signage, no money, no coins.",
+  "jobs": [
+    { "name": "hero-wide", "aspect": "16:9", "prompt": "A wide view of a small wooden cabin on the shore of a calm lake at dusk, a short wooden jetty with a moored pontoon boat and an upturned canoe, tall pines behind, a thin line of smoke from the chimney, low sun reflected in the water." },
+    { "name": "cabin", "aspect": "4:3", "prompt": "Inside a timber cabin: a long wooden table set for eight with enamel mugs, a lantern, a bowl of apples and a folded blank paper map, a window looking out to a lake and pines, warm and calm." },
+    { "name": "kayaks", "aspect": "16:9", "prompt": "Four small kayaks in a loose line crossing a still lake seen from above at a distance, tiny anonymous paddlers, long ripples, a rocky shore with pines at one edge." },
+    { "name": "jetty", "aspect": "1:1", "prompt": "Close view of a wooden jetty: coiled rope, a brass cleat, a canvas duffel bag and a pair of paddles leaning on a post, lake water and a moored pontoon boat behind." },
+    { "name": "purse", "aspect": "16:9", "prompt": "Still life on weathered deck planks: a closed leather purse with a brass clasp, a brass ship compass, a coil of rope and a ring of old keys, seen from above, nautical and calm." },
+    { "name": "tall", "aspect": "9:16", "prompt": "Tall pines framing a calm lake at first light, a single canoe drifting near the shore, mist over the water, a small cabin far away on the opposite bank." }
+  ]
+}
