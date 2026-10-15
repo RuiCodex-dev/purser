@@ -59,8 +59,8 @@ test("end to end in fixture mode: plan, pay, capture, approve, payout, drop-out 
     assert.ok(v.event.orders.every((o: any) => o.status === "PAYER_ACTION_REQUIRED" && o.via === "agent-toolkit"));
     assert.equal(v.event.invoices.length, 1);
     assert.equal(v.event.invoices[0].status, "SENT", "invoice created then sent in the same run");
-    const pending = v.event.approvals.filter((a: any) => a.status === "pending");
-    assert.equal(pending.length, 3, "Maya, Jonah and the vendor wait: the pot is empty");
+    assert.equal(v.event.approvals.length, 0, "nothing to approve yet");
+    assert.equal(v.event.payouts.length, 0, "no payout attempted: the pot is empty");
 
     // 2. Priya opens her pay link, approves in the simulator, comes back, gets captured.
     const priya = v.event.participants.find((p: any) => p.name === "Priya");
@@ -91,11 +91,9 @@ test("end to end in fixture mode: plan, pay, capture, approve, payout, drop-out 
     assert.equal(v.event.orders.filter((x: any) => x.capturedCents > 0).length, 1, "captured exactly once despite return URL + webhook");
     assert.ok(v.event.audit.some((a: any) => a.actor === "webhook" && /PAYMENT\.CAPTURE\.COMPLETED/.test(a.action)));
 
-    // 3. Now the pot covers Jonah's reimbursement: approving it executes the payout.
-    const jonahApproval = v.event.approvals.find((a: any) => a.status === "pending" && /Jonah/.test(a.subject));
-    const decided = await api(base, `/api/events/${id}/approvals/${jonahApproval.id}`, { method: "POST", json: { decision: "approve" } });
-    assert.equal(decided.data.outcome.verdict, "allow");
-    assert.equal(decided.data.outcome.ok, true);
+    // 3. Now the pot covers Jonah's $80.50 (under the limit): the treasurer pays it without asking.
+    const second = await api(base, `/api/events/${id}/agent`, { method: "POST", json: { instruction: "Settle up" } });
+    assert.ok(second.data.trace.some((s: any) => s.outcome?.tool === "create_payout" && s.outcome.verdict === "allow"));
     await sleep(60);
     v = (await api(base, `/api/events/${id}`)).data;
     const payout = v.event.payouts[0];

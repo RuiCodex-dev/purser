@@ -177,6 +177,31 @@ const DRAFT_SCHEMA = {
   required: ["name", "currency", "participants", "items", "sponsors"],
 };
 
+/**
+ * Every name a model returns must be present in the brief itself. A model that
+ * adds a person, a vendor or a sponsor (or garbles one) fails this check, and
+ * the brief goes to the strict parser instead.
+ */
+export function groundingIssues(d: EventDraft, text: string): string[] {
+  const hay = text.toLowerCase();
+  const out: string[] = [];
+  const check = (what: string, v?: string) => {
+    if (v && !hay.includes(v.trim().toLowerCase())) out.push(`${what} "${v}" is not in the brief`);
+  };
+  for (const p of d.participants ?? []) check("Participant", p.name);
+  for (const i of d.items ?? []) {
+    check("Vendor", i.vendorName);
+    check("Vendor email", i.vendorEmail);
+    check("Payer", i.paidBy);
+  }
+  for (const s of d.sponsors ?? []) {
+    check("Sponsor", s.name);
+    check("Sponsor email", s.email);
+  }
+  for (const p of d.participants ?? []) check("Email", p.email);
+  return out;
+}
+
 export async function parseBrief(
   text: string,
   llm: Gemini,
@@ -198,7 +223,7 @@ export async function parseBrief(
       d.participants ??= [];
       d.dateLabel ??= "";
       d.location ??= "";
-      const issues = checkDraft(d);
+      const issues = [...checkDraft(d), ...groundingIssues(d, text)];
       if (!issues.length) return { draft: d, issues, by: "model", model: r.model };
       const offline = parseBriefOffline(text);
       if (!offline.issues.length) return { ...offline, by: "parser", note: `Model draft failed checks (${issues[0]}); used the offline parser` };

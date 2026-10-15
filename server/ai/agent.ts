@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { computeLedger } from "../domain/ledger.ts";
 import { format, toDecimal } from "../domain/money.ts";
-import { describeIntent, plan } from "../domain/planner.ts";
+import { describeIntent, plan, waitingPayouts } from "../domain/planner.ts";
 import type { PurserEvent } from "../domain/types.ts";
 import { TOOLKIT_ACTIONS } from "../paypal/live.ts";
 import type { Bus } from "../store.ts";
@@ -98,11 +98,16 @@ export function ledgerSnapshot(ev: PurserEvent, t: Treasury) {
     vendors: l.vendors.map((v) => ({ name: v.vendor.name, email: v.vendor.email, for: v.label, due: toDecimal(v.dueCents) })),
     sponsors: ev.sponsors.map((s) => ({ id: s.id, name: s.name, email: s.email, pledged: toDecimal(s.amountCents), invoices: ev.invoices.filter((i) => i.sponsorId === s.id).map((i) => ({ id: i.id, status: i.status, reminders: i.reminders })) })),
     pendingApprovals: ev.approvals.filter((a) => a.status === "pending").map((a) => ({ id: a.id, subject: a.subject, amount: toDecimal(a.amountCents) })),
-    ledgerEngineSuggests: plan(ev, { includeReminders: true }, l).map((i) => {
-      const c = t.toolCallFor(ev, i);
-      return { what: describeIntent(ev, i), tool: c.name, args: c.args };
-    }),
+    waitingForFunds: waitingPayouts(ev, l).map((w) => ({ who: w.who, amount: toDecimal(w.amountCents), why: "the pot does not hold this yet; do not attempt it" })),
+    ledgerEngineSuggests: nextSteps(ev, t),
   };
+}
+
+export function nextSteps(ev: PurserEvent, t: Treasury) {
+  return plan(ev, { includeReminders: false }).map((i) => {
+    const c = t.toolCallFor(ev, i);
+    return { what: describeIntent(ev, i), tool: c.name, args: c.args };
+  });
 }
 
 const SYSTEM = `You are Purser, the treasurer agent for one group event. You move real (sandbox) money through PayPal tools.
@@ -111,11 +116,13 @@ How you work:
 - The ledger engine does the arithmetic. Use get_ledger and its "ledgerEngineSuggests" list; never compute shares yourself and never invent people, amounts, emails or ids.
 - Every money tool is checked by the organizer's mandate against the ledger before it reaches PayPal. A result starting with DENIED explains why: correct the call using the ledger, or skip it. QUEUED means the organizer must approve it; do not retry it.
 - create_order always needs participant_id. Use one line item per share line, with the credits as the discount, exactly as suggested.
+- create_invoice only creates a DRAFT. Send it with send_invoice, using the invoice id from the result.
 - Prefer returning money on the rail it came in on: refund a capture before paying out.
+- Payouts listed under waitingForFunds cannot happen yet: the pot does not hold the money. Do not attempt them.
+- Every tool result includes next_steps: what the ledger engine says still has to move. You are done when it is empty or only holds items you decided to skip.
 - Write any note_to_payer or invoice note in a warm, plain sentence. No emoji.
-- Do the work in as few calls as possible, then stop calling tools.
 
-When you are done, reply with a short note for the group chat (3 sentences at most): what was requested, what is waiting for the organizer, and what happens next. Plain text.`;
+When you are done, reply with a note for the group chat in at most 50 words: what was requested, what waits for the organizer or for money to arrive, and what happens next. Plain text, no lists.`;
 
 export class Agent {
   private llm: Gemini;
@@ -189,7 +196,9 @@ export class Agent {
         this.emit(ev, trace, { kind: "call", tool: c.name, args: c.args, text: c.name });
         const o = await this.treasury.run(ev, c.name, c.args as Record<string, any>, "agent");
         this.emit(ev, trace, { kind: "result", tool: c.name, text: o.summary, outcome: o });
-        responses.parts.push({ functionResponse: { id: c.id, name: c.name, response: { result: o.summary, verdict: o.verdict, paypal_id: o.paypalId ?? null } } });
+        responses.parts.push({
+          functionResponse: { id: c.id, name: c.name, response: { result: o.summary, verdict: o.verdict, paypal_id: o.paypalId ?? null, next_steps: nextSteps(ev, this.treasury) } },
+        });
       }
       contents.push(responses);
     }

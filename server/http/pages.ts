@@ -11,8 +11,7 @@ export const esc = (s: unknown) =>
 
 const STYLE = `
 @font-face{font-family:"Fraunces";src:url(/fonts/fraunces-var.woff2) format("woff2");font-weight:300 800;font-display:swap}
-@font-face{font-family:"IBM Plex Sans";src:url(/fonts/plex-sans-400.woff2) format("woff2");font-weight:400;font-display:swap}
-@font-face{font-family:"IBM Plex Sans";src:url(/fonts/plex-sans-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"IBM Plex Sans";src:url(/fonts/plex-sans-var.woff2) format("woff2");font-weight:100 700;font-display:swap}
 :root{--ink:#13212E;--deck:#F3EFE6;--sheet:#FFFDF8;--rule:#DCD5C7;--fog:#56616B;--brass:#A87A2C;--brass-d:#7E5B1E;--harbor:#1E5B55;--signal:#A3372A;--sea:#E3EEEA}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--deck);color:var(--ink);font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px}

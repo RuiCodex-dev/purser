@@ -9,7 +9,7 @@ import type { Config } from "./config.ts";
 import { buildEvent, checkDraft, placeholderEmail, type EventDraft } from "./domain/build.ts";
 import { computeLedger } from "./domain/ledger.ts";
 import { toCents } from "./domain/money.ts";
-import { describeIntent, plan } from "./domain/planner.ts";
+import { describeIntent, plan, waitingPayouts } from "./domain/planner.ts";
 import type { CostItem, Mandate, PurserEvent } from "./domain/types.ts";
 import { messagePage, payPage, simCheckoutPage, simInvoicePage } from "./http/pages.ts";
 import { FixturePayPal } from "./paypal/fixtures.ts";
@@ -84,6 +84,7 @@ export function createApp(cfg: Config, opts: { webRoot?: string } = {}): App {
     event: ev,
     ledger: computeLedger(ev),
     plan: plan(ev, { includeReminders: false }).map((i) => ({ ...i, what: describeIntent(ev, i) })),
+    waiting: waitingPayouts(ev),
     payLinks: Object.fromEntries(ev.participants.map((p) => [p.id, treasury.payUrl(ev, p.id)])),
   });
 

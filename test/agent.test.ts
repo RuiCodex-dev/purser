@@ -5,7 +5,7 @@ import { Gemini, type GenerateRequest, type GenerateResult } from "../server/ai/
 import { FixturePayPal } from "../server/paypal/fixtures.ts";
 import { Bus, Store } from "../server/store.ts";
 import { Treasury } from "../server/treasury.ts";
-import { byName, sampleEvent } from "./helpers.ts";
+import { byName, fakeCapture, sampleEvent } from "./helpers.ts";
 
 /** A model that follows a script, to test what the mandate does with bad calls. */
 class ScriptedModel extends Gemini {
@@ -44,12 +44,12 @@ test("the mandate stops a model that tries to misdirect money", async () => {
   const r = await agent.run(ev, "Settle up");
   assert.equal(r.by, "model");
   const results = r.trace.filter((s) => s.kind === "result").map((s) => s.outcome!);
-  assert.deepEqual(results.map((o) => o.verdict), ["deny", "deny", "allow", "approval"]);
+  assert.deepEqual(results.map((o) => o.verdict), ["deny", "deny", "allow", "deny"]);
   assert.match(results[0].summary, /not a participant, a listed vendor or a trusted payee/);
   assert.match(results[1].summary, /owes \$276\.50/);
   assert.equal(ev.payouts.length, 0, "no money left the pot");
   assert.equal(ev.orders.length, 1);
-  assert.equal(ev.approvals.filter((a) => a.status === "pending").length, 1);
+  assert.match(results[3].summary, /waits until the money is collected/);
   // The denial reason went back to the model so it could correct itself.
   const fr = JSON.stringify(model.seen[1].contents.at(-1));
   assert.match(fr, /DENIED by the mandate/);
@@ -64,6 +64,8 @@ test("a pending approval expires when the ledger moves under it", async () => {
   const treasury = new Treasury(store, pp, bus, "http://x");
   const ev = sampleEvent();
   store.data.events.push(ev);
+  fakeCapture(ev, "Priya", 27650);
+  ev.mandate.maxPayoutCents = 5000; // so Jonah's $80.50 needs a human
   const out = await treasury.run(ev, "create_payout", { email: "jonah@example.com", amount: "80.50", currency: "USD", note: "Groceries" }, "agent");
   assert.equal(out.verdict, "approval");
   // The groceries Jonah fronted are taken off the budget: the pot no longer owes him anything.

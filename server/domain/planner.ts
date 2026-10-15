@@ -30,6 +30,14 @@ export type Intent =
 
 export interface PlanOptions {
   includeReminders?: boolean;
+  /** The mandate wants every payout the ledger owes, covered or not, to give the right reason. */
+  ignorePot?: boolean;
+}
+
+export interface WaitingPayout {
+  kind: "payout_participant" | "payout_vendor";
+  who: string;
+  amountCents: Cents;
 }
 
 export function plan(ev: PurserEvent, opts: PlanOptions = {}, ledger: Ledger = computeLedger(ev)): Intent[] {
@@ -68,6 +76,7 @@ export function plan(ev: PurserEvent, opts: PlanOptions = {}, ledger: Ledger = c
       out.push({ kind: "remind_invoice", sponsorId: s.id, invoiceId: live.id });
   }
 
+  const payouts: Extract<Intent, { kind: "payout_participant" | "payout_vendor" }>[] = [];
   for (const r of ledger.rows) {
     if (r.positionCents >= 0) continue;
     let owed = -r.positionCents;
@@ -82,15 +91,42 @@ export function plan(ev: PurserEvent, opts: PlanOptions = {}, ledger: Ledger = c
       out.push({ kind: "refund", participantId: r.participantId, orderId: o.id, captureId: o.captureId!, amountCents: amount });
       owed -= amount;
     }
-    if (owed > 0) out.push({ kind: "payout_participant", participantId: r.participantId, email: r.email, amountCents: owed });
+    if (owed > 0) payouts.push({ kind: "payout_participant", participantId: r.participantId, email: r.email, amountCents: owed });
   }
 
   for (const v of ledger.vendors) {
     if (v.dueCents > 0)
-      out.push({ kind: "payout_vendor", itemId: v.itemId, email: v.vendor.email, vendorName: v.vendor.name, amountCents: v.dueCents });
+      payouts.push({ kind: "payout_vendor", itemId: v.itemId, email: v.vendor.email, vendorName: v.vendor.name, amountCents: v.dueCents });
   }
 
+  // Payouts only for money that has arrived. People who fronted costs come
+  // before vendors, smaller amounts first, so more people are made whole sooner.
+  let available = ledger.totals.potCents + ev.mandate.floatCents;
+  payouts.sort((a, b) => (a.kind === b.kind ? a.amountCents - b.amountCents : a.kind === "payout_participant" ? -1 : 1));
+  for (const p of payouts) {
+    if (opts.ignorePot || p.amountCents <= available) {
+      out.push(p);
+      available -= p.amountCents;
+    }
+  }
   return out;
+}
+
+/** Payouts the ledger owes but the pot cannot cover yet. */
+export function waitingPayouts(ev: PurserEvent, ledger: Ledger = computeLedger(ev)): WaitingPayout[] {
+  const planned = new Set(plan(ev, {}, ledger).filter((i) => i.kind === "payout_participant" || i.kind === "payout_vendor").map((i) => JSON.stringify(i)));
+  const all: WaitingPayout[] = [];
+  for (const r of ledger.rows) {
+    if (r.positionCents >= 0) continue;
+    const refundable = ev.orders.filter((o) => o.participantId === r.participantId).reduce((s, o) => s + o.capturedCents - o.refundedCents, 0);
+    const owed = -r.positionCents - Math.min(refundable, -r.positionCents);
+    if (owed > 0 && !planned.has(JSON.stringify({ kind: "payout_participant", participantId: r.participantId, email: r.email, amountCents: owed })))
+      all.push({ kind: "payout_participant", who: r.name, amountCents: owed });
+  }
+  for (const v of ledger.vendors)
+    if (v.dueCents > 0 && !planned.has(JSON.stringify({ kind: "payout_vendor", itemId: v.itemId, email: v.vendor.email, vendorName: v.vendor.name, amountCents: v.dueCents })))
+      all.push({ kind: "payout_vendor", who: v.vendor.name, amountCents: v.dueCents });
+  return all;
 }
 
 export function describeIntent(ev: PurserEvent, i: Intent): string {

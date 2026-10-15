@@ -36,7 +36,7 @@ export function evaluate(
   opts: { approved?: boolean; now?: number; ledger?: Ledger } = {},
 ): Decision {
   const ledger = opts.ledger ?? computeLedger(ev);
-  const intents = plan(ev, { includeReminders: true }, ledger);
+  const intents = plan(ev, { includeReminders: true, ignorePot: true }, ledger);
   const m = ev.mandate;
   const fmt = (c: Cents) => format(c, ev.currency);
   const deny = (subject: string, amountCents: Cents, reasons: string[], expected?: string): Decision => ({
@@ -142,9 +142,13 @@ export function evaluate(
       } else {
         return deny("Payout", action.amountCents, [`${email} is not a participant, a listed vendor or a trusted payee`]);
       }
-      if (action.amountCents > m.maxPayoutCents) extra.push(`Above the ${fmt(m.maxPayoutCents)} payout limit`);
+      // Hard rule, not an approval: money leaves the pot only once it has arrived
+      // (plus whatever float the organizer chose to front from the business balance).
       if (action.amountCents > ledger.totals.potCents + m.floatCents)
-        extra.push(`The pot holds ${fmt(ledger.totals.potCents)}; this would pay out money not yet collected`);
+        return deny(subject, action.amountCents, [
+          `The pot holds ${fmt(ledger.totals.potCents)}${m.floatCents ? ` plus a ${fmt(m.floatCents)} float` : ""}; this payout waits until the money is collected`,
+        ]);
+      if (action.amountCents > m.maxPayoutCents) extra.push(`Above the ${fmt(m.maxPayoutCents)} payout limit`);
       return ok(subject, action.amountCents, reasons, extra);
     }
 
