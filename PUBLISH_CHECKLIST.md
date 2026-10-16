@@ -19,8 +19,8 @@
 ## Status 2026-10-16 (RUI-219)
 
 - Sandbox app exists; keys in `C:/Users/Admin/.ruicodex-keys/purser.env.json`. Live checks:
-  28/28 (`scripts/live-e2e.ts`, `docs/sandbox-evidence/e2e-phase1-*.json`).
-- 25/25 offline tests; clean `npm ci` + build + typecheck; gitleaks over the full history: no
+  phase 1 28/28 and phase 2 9/9 (`scripts/live-e2e.ts`, `docs/sandbox-evidence/e2e-phase*.json`).
+- 27/27 offline tests; clean `npm ci` + build + typecheck; gitleaks over the full history: no
   leaks; author/committer on every commit is the GitHub noreply identity.
 - Video rendered: `video/purser-demo.mp4` + `video/purser-demo.en.srt` (upload text in
   `video/YOUTUBE.md`).
@@ -30,7 +30,8 @@
 
 ## 0. Owner: optional, finishes the live evidence
 
-- [ ] Phase 2 of the live run needs one sandbox buyer payment: start Purser live, open two
+- [x] Done 2026-10-16 (event `ba07da5b`, 9/9, paid as guest with a sandbox test card; see
+      `qa/QA-2026-10-16.md` section 10). Phase 2 of the live run needs one sandbox buyer payment: start Purser live, open two
       participants' pay links, log in as the sandbox personal account
       (sb-oohr853374521@personal.example.com; its password is shown only in the developer
       dashboard > Testing Tools > Sandbox Accounts) and pay; then
@@ -40,7 +41,7 @@
 
 ## 1. Before any publish
 
-- [x] `npm ci && npm run build && npm test` passes (25 tests).
+- [x] `npm ci && npm run build && npm test` passes (27 tests).
 - [x] Secret scan clean (`npm run secret-scan` + gitleaks over the full history).
 - [x] `data/`, `qa/run-data-*`, `.env`, `design/gen/`, `video/work/`, `video/hyperframes/assets/clips/`,
       `video/hyperframes/assets/mix.wav` and rendered MP4s are git-ignored.

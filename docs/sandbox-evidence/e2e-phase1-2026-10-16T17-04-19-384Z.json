@@ -1,0 +1,209 @@
+{
+  "environment": "PayPal sandbox",
+  "toolkit": "1.11.0",
+  "result": {
+    "id": "ba07da5b",
+    "denied": 0
+  },
+  "checks": [
+    {
+      "step": "server is in live sandbox mode",
+      "pass": true,
+      "detail": {
+        "mode": "sandbox",
+        "label": "PayPal sandbox",
+        "toolkit": "@paypal/agent-toolkit 1.11.0",
+        "webhookVerification": "off"
+      }
+    },
+    {
+      "step": "Gemini configured",
+      "pass": true,
+      "detail": "gemini-3.5-flash"
+    },
+    {
+      "step": "brief parsed",
+      "pass": true,
+      "detail": {
+        "by": "model",
+        "model": "gemini-3.5-flash-lite"
+      }
+    },
+    {
+      "step": "event created",
+      "pass": true,
+      "detail": 8
+    },
+    {
+      "step": "treasurer run finished",
+      "pass": true,
+      "detail": {
+        "by": "model",
+        "model": "gemini-3.5-flash-lite",
+        "ms": 74463,
+        "calls": 8
+      }
+    },
+    {
+      "step": "one sandbox order per person who owes",
+      "pass": true,
+      "detail": 6
+    },
+    {
+      "step": "orders created through the Agent Toolkit",
+      "pass": true
+    },
+    {
+      "step": "no payout attempted from an empty pot",
+      "pass": true
+    },
+    {
+      "step": "sandbox orders match the ledger",
+      "pass": true,
+      "detail": "6/6"
+    },
+    {
+      "step": "sponsor invoice SENT in the sandbox",
+      "pass": true,
+      "detail": {
+        "id": "INV2-39F4-W68Y-7PG7-KVRK",
+        "status": "SENT",
+        "amount": "200.00"
+      }
+    },
+    {
+      "step": "pay page shows the exact amount",
+      "pass": true
+    },
+    {
+      "step": "pay link redirects to sandbox PayPal checkout",
+      "pass": true,
+      "detail": "www.sandbox.paypal.com"
+    },
+    {
+      "step": "double click: same PayPal page, no second order",
+      "pass": true
+    },
+    {
+      "step": "Priya still has exactly one open order",
+      "pass": true
+    },
+    {
+      "step": "no money to the attacker",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "step": "no $999 order",
+      "pass": true
+    },
+    {
+      "step": "reimbursement under the limit paid automatically (Payouts v1)",
+      "pass": true,
+      "detail": {
+        "batch": "ULU3TK5A9J5KG",
+        "status": "PENDING",
+        "amount": 8050
+      }
+    },
+    {
+      "step": "vendor payment waits in the approval inbox",
+      "pass": true,
+      "detail": "Pay Lakeside Rentals"
+    },
+    {
+      "step": "large reimbursement beyond pot+float not executed",
+      "pass": true,
+      "detail": "not queued (waits for money)"
+    },
+    {
+      "step": "approved vendor payout sent once despite a double click",
+      "pass": true,
+      "detail": {
+        "status": "PENDING",
+        "outcomes": [
+          "allow",
+          null
+        ]
+      }
+    },
+    {
+      "step": "reconcile ran",
+      "pass": true,
+      "detail": {
+        "changes": 2,
+        "payouts": [
+          "participant:SUCCESS",
+          "vendor:PENDING"
+        ]
+      }
+    },
+    {
+      "step": "one invoice reminder sent, the next refused by the cooldown",
+      "pass": true,
+      "detail": {
+        "first": [
+          "allow"
+        ],
+        "second": [
+          "deny"
+        ]
+      }
+    },
+    {
+      "step": "ask the ledger returns a grid filter",
+      "pass": true,
+      "detail": {
+        "by": "model",
+        "filter": {
+          "position": {
+            "filterType": "number",
+            "type": "greaterThan",
+            "filter": 250
+          }
+        },
+        "sort": [
+          {
+            "colId": "position",
+            "sort": "desc"
+          }
+        ]
+      }
+    },
+    {
+      "step": "list_transactions (toolkit, Reporting)",
+      "pass": true,
+      "detail": {
+        "count": 36
+      }
+    },
+    {
+      "step": "PayPal-Request-Id makes order creation idempotent",
+      "pass": true,
+      "detail": {
+        "id": "2HX32556UG201482D"
+      }
+    },
+    {
+      "step": "sandbox INSTRUMENT_DECLINED is recognised by Purser",
+      "pass": true,
+      "detail": {
+        "http": 422,
+        "error": "INSTRUMENT_DECLINED: The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debugId": "f891011c5f833"
+      }
+    },
+    {
+      "step": "expired access token is refreshed transparently",
+      "pass": true,
+      "detail": {
+        "http": 200
+      }
+    },
+    {
+      "step": "network failure surfaces as an error the treasury records",
+      "pass": true,
+      "detail": "fetch failed"
+    }
+  ]
+}

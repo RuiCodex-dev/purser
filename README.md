@@ -122,7 +122,7 @@ fixtures (offline), apply the PayPal response to the ledger and write an audit e
 the PayPal id and debug id. Every tool result returns the ledger engine's remaining
 `next_steps`, so the model always knows what is left.
 
-Tests: `npm test` (25 tests, no network) - money and split invariants, the drop-out maths,
+Tests: `npm test` (27 tests, no network) - money and split invariants, the drop-out maths,
 every mandate rule, the brief parser, grounding check and its repairs, a full fixture flow
 over HTTP (pay link -> checkout simulator -> capture exactly once despite return URL and
 webhook racing -> payout settled by webhook -> drop-out refund -> sponsor invoice paid ->
@@ -131,15 +131,18 @@ overcharge a guest and pay out money not yet collected (all three denied, nothin
 and the failure paths: two identical payouts at once (PayPal is called once), a double
 click on a pay link (one order), a card declined at capture (the payer is sent back to
 PayPal for the same order), a payer approving a replaced request (never captured), a
-network failure (audited, nothing recorded) and an expired OAuth token (refreshed once,
-same PayPal-Request-Id).
+network failure (audited, nothing recorded), an expired OAuth token (refreshed once,
+same PayPal-Request-Id), a refund whose answer was lost (read back from PayPal, never sent
+twice) and a model that gets refundability wrong (corrected from the brief).
 
 Live: `node scripts/live-e2e.ts` runs 28 checks against the real PayPal sandbox and Gemini
 (orders through the Agent Toolkit matched to the ledger, the sponsor invoice sent and
 reminded, the reminder cooldown, a pay link landing on PayPal's sandbox checkout, payouts
 and the approval inbox, reconcile, transaction search, request-id idempotency, a sandbox
-`INSTRUMENT_DECLINED`, token refresh). `--continue <event>` checks captures and refunds once
-a sandbox buyer has paid. Evidence: `docs/sandbox-evidence/`.
+`INSTRUMENT_DECLINED`, token refresh). `--continue <event>` checks captures, idempotent
+re-capture, the drop-out refund and that PayPal holds exactly the refunds the ledger booked,
+once two pay links have been paid on PayPal's sandbox checkout (9 checks; passed 9/9 on
+2026-10-16 with guest card payments). Evidence: `docs/sandbox-evidence/`.
 
 ## AI tools used
 

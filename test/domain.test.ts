@@ -204,3 +204,25 @@ test("grounding repair: an email the model dropped is restored from the vendor's
   assert.equal(d.items[1].vendorEmail, undefined, "no email in its sentence: none is borrowed from another one");
   assert.equal(d.sponsors[0].email, "hr@northwind.example");
 });
+
+test("grounding repair: refundability comes from the brief, not from the model", async () => {
+  const { groundRefundability, SAMPLE_BRIEF, parseBriefOffline } = await import("../server/ai/brief.ts");
+  // A live model run marked every cost non-refundable; a drop-out would then get nothing back.
+  const d: any = parseBriefOffline(SAMPLE_BRIEF).draft;
+  for (const i of d.items) i.refundable = false;
+  assert.equal(groundRefundability(d, SAMPLE_BRIEF), 3);
+  assert.deepEqual(d.items.map((i: any) => [i.label, i.refundable]), [
+    ["Cabin rental", false],
+    ["Groceries and firewood", true],
+    ["Guided kayak tour", true],
+    ["Pontoon boat", true],
+  ]);
+  // The reverse: a model that calls the cabin refundable is corrected too.
+  for (const i of d.items) i.refundable = true;
+  assert.equal(groundRefundability(d, SAMPLE_BRIEF), 1);
+  assert.equal(d.items[0].refundable, false);
+  // A label written differently is matched by its words; an unmentioned cost keeps its flag.
+  const e: any = { items: [{ label: "boat", refundable: true }, { label: "Snacks", refundable: false }] };
+  groundRefundability(e, "We rent a boat for $90, deposit is lost if we cancel.");
+  assert.deepEqual(e.items.map((i: any) => i.refundable), [false, false]);
+});

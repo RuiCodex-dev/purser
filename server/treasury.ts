@@ -305,8 +305,29 @@ export class Treasury {
         return r;
       }
       case "create_refund": {
+        // The toolkit's create_refund sends no PayPal-Request-Id, so repeating a
+        // refund whose answer was lost would refund twice. Read the capture's
+        // refunds from PayPal first: one PayPal holds and the ledger does not is
+        // recorded, and nothing more is sent (the next run re-plans from it).
+        const o = ev.orders.find((x) => x.captureId === action.captureId);
+        if (o) {
+          const before = o.refundedCents;
+          const got = await this.pp.getOrder(o.id);
+          if (!got.ok)
+            return { ok: false, status: got.status, data: got.data, debugId: got.debugId, error: `Could not confirm earlier refunds on this capture (${got.error ?? got.status}); nothing was sent` };
+          this.applyOrder(ev, got.data);
+          if (o.refundedCents !== before)
+            return {
+              ok: false,
+              status: 409,
+              data: null,
+              error: `PayPal already holds a refund of ${format(o.refundedCents - before, ev.currency)} on this capture that the ledger had not recorded; it is recorded now and nothing more was sent`,
+            };
+        }
         const r = await this.pp.callTool("create_refund", call);
-        if (r.ok) this.applyRefund(ev, r.data, action.captureId);
+        // PayPal answers a refund with id, status and links only (no amount), so
+        // the amount recorded is the explicit amount that was sent.
+        if (r.ok) this.applyRefund(ev, r.data, action.captureId, action.amountCents);
         return r;
       }
       case "create_payout": {
@@ -411,12 +432,13 @@ export class Treasury {
     for (const rf of pay?.refunds ?? []) this.applyRefund(ev, rf, o.captureId);
   }
 
-  applyRefund(ev: PurserEvent, rf: any, captureId?: string) {
+  applyRefund(ev: PurserEvent, rf: any, captureId?: string, sentCents?: Cents) {
     const capId = captureId ?? String((rf.links ?? []).find((l: any) => l.rel === "up")?.href ?? "").split("/").pop();
     const o = ev.orders.find((x) => x.captureId === capId);
     if (!o || ev.refunds.some((r) => r.id === rf.id)) return;
     if (rf.status && !["COMPLETED", "PENDING"].includes(rf.status)) return;
-    const cents = toCents(rf.amount.value);
+    const cents = rf.amount?.value !== undefined ? toCents(rf.amount.value) : sentCents;
+    if (cents === undefined) return;
     ev.refunds.push({ id: rf.id, orderId: o.id, captureId: capId!, participantId: o.participantId, amountCents: cents, status: rf.status ?? "COMPLETED", createdAt: new Date().toISOString() });
     o.refundedCents += cents;
   }

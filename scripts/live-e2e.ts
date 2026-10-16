@@ -212,6 +212,12 @@ async function phase2(id: string) {
     if (rf) {
       const got = await pp.callTool("get_refund", { refund_id: rf.id });
       check("refund visible in the sandbox", got.ok, got.ok ? { status: got.data?.status, value: got.data?.amount?.value } : got.error);
+      // PayPal must hold exactly the refunds the ledger holds: a refund that was
+      // sent twice (or sent and not booked) shows up here and nowhere else.
+      const ord = await pp.getOrder(first.id);
+      const held = (ord.data?.purchase_units?.[0]?.payments?.refunds ?? []).map((x: any) => ({ id: x.id, cents: cents(x.amount.value) }));
+      const booked = v.event.refunds.filter((r: any) => r.captureId === first.captureId).map((r: any) => r.id).sort();
+      check("PayPal holds exactly the refunds the ledger booked (no double refund)", ord.ok && held.length === booked.length && held.map((x: any) => x.id).sort().join() === booked.join(), { paypal: held, ledger: booked });
     }
     check("dropped payer's position is zero", ledgerRow(v, who.name)?.positionCents === 0);
   }

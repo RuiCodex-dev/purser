@@ -276,7 +276,8 @@ export class FixturePayPal implements PayPalPort {
     else cap.status = "PARTIALLY_REFUNDED";
     this.s.refunds[refund.id] = refund;
     this.emit("PAYMENT.CAPTURE.REFUNDED", structuredClone(refund), "refund", `A $ ${refund.amount.value} USD capture payment was refunded`);
-    return this.ok(structuredClone(refund), 201);
+    // Like the live API without "Prefer: return=representation": no amount.
+    return this.ok({ id: refund.id, status: refund.status, links: structuredClone(refund.links) }, 201);
   }
 
   private createInvoice(a: Record<string, any>): CallResult {

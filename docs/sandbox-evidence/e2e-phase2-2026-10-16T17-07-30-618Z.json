@@ -1,0 +1,79 @@
+{
+  "environment": "PayPal sandbox",
+  "toolkit": "1.11.0",
+  "checks": [
+    {
+      "step": "buyer payments captured",
+      "pass": true,
+      "detail": [
+        {
+          "order": "6L82205224986915J",
+          "capture": "83G42722AF501074M",
+          "cents": 27650
+        },
+        {
+          "order": "85682207TS9719728",
+          "capture": "5UK5018565250141V",
+          "cents": 27650
+        }
+      ]
+    },
+    {
+      "step": "capture 83G42722AF501074M COMPLETED in the sandbox",
+      "pass": true
+    },
+    {
+      "step": "re-capture with the same request id is idempotent (no second charge)",
+      "pass": true,
+      "detail": {
+        "http": 200
+      }
+    },
+    {
+      "step": "capture 5UK5018565250141V COMPLETED in the sandbox",
+      "pass": true
+    },
+    {
+      "step": "re-capture with the same request id is idempotent (no second charge)",
+      "pass": true,
+      "detail": {
+        "http": 200
+      }
+    },
+    {
+      "step": "drop-out refunded on the original capture",
+      "pass": true,
+      "detail": {
+        "refund": "9JG32162X2938903V",
+        "cents": 9150
+      }
+    },
+    {
+      "step": "refund visible in the sandbox",
+      "pass": true,
+      "detail": {
+        "status": "COMPLETED",
+        "value": "91.50"
+      }
+    },
+    {
+      "step": "PayPal holds exactly the refunds the ledger booked (no double refund)",
+      "pass": true,
+      "detail": {
+        "paypal": [
+          {
+            "id": "9JG32162X2938903V",
+            "cents": 9150
+          }
+        ],
+        "ledger": [
+          "9JG32162X2938903V"
+        ]
+      }
+    },
+    {
+      "step": "dropped payer's position is zero",
+      "pass": true
+    }
+  ]
+}

@@ -9,6 +9,7 @@ Pontoon boat $260 from Lakeside Rentals (rentals@lakeside.example), we pay them 
 Ridgeline Outfitters sponsors $200 (events@ridgeline.example).
 Collect by Nov 10.`;
 
+const NON_REFUNDABLE = /non-?refundable|no refunds?|deposit is lost/i;
 const CURRENCY: Record<string, string> = { $: "USD", "€": "EUR", "£": "GBP" };
 const AMOUNT = /([$€£])\s?(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)|(\d+(?:\.\d{1,2})?)\s?(USD|EUR|GBP|dollars|euros)/i;
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/;
@@ -110,7 +111,7 @@ export function parseBriefOffline(text: string): { draft: EventDraft; issues: st
       label: label || "Cost",
       kind: perHead ? "per_head" : "shared",
       amount: m.amount,
-      refundable: !/non-?refundable|no refunds?|deposit is lost/i.test(s),
+      refundable: !NON_REFUNDABLE.test(s),
     };
     if (optional) {
       item.optedIn = names(optional[1]).map(isPerson).filter((x): x is string => Boolean(x));
@@ -294,6 +295,34 @@ export function crossFill(d: EventDraft, offline: EventDraft): void {
   }
 }
 
+/**
+ * Whether a cost is refundable decides who gets money back on a drop-out, so it
+ * comes from the brief, not from the model: a cost is non-refundable exactly when
+ * a sentence about it says so. Sentences naming the whole label decide; if none
+ * does, sentences naming one of its words do. A cost the brief never mentions keeps
+ * the model's value. Returns how many flags changed.
+ */
+export function groundRefundability(d: EventDraft, text: string): number {
+  const sentences = text.split(/\n|(?<=[.!?])\s+/).map((x) => x.toLowerCase());
+  let fixed = 0;
+  for (const i of d.items ?? []) {
+    const label = (i.label ?? "").trim().toLowerCase();
+    if (!label) continue;
+    let about = sentences.filter((x) => x.includes(label));
+    if (!about.length) {
+      const words = label.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 4);
+      about = sentences.filter((x) => words.some((w) => new RegExp(`(?<![\\p{L}\\p{N}])${w}(?![\\p{L}\\p{N}])`, "u").test(x)));
+    }
+    if (!about.length) continue;
+    const refundable = !about.some((x) => NON_REFUNDABLE.test(x));
+    if (i.refundable !== refundable) {
+      i.refundable = refundable;
+      fixed++;
+    }
+  }
+  return fixed;
+}
+
 export async function parseBrief(
   text: string,
   llm: Gemini,
@@ -319,6 +348,7 @@ export async function parseBrief(
       const offline = parseBriefOffline(text);
       if (!offline.issues.length) crossFill(d, offline.draft);
       restoreEmails(d, text);
+      groundRefundability(d, text);
       const issues = [...checkDraft(d), ...groundingIssues(d, text)];
       if (!issues.length) return { draft: d, issues, by: "model", model: r.model };
       if (!offline.issues.length) return { ...offline, by: "parser", note: `Model draft failed checks (${issues[0]}); used the offline parser` };

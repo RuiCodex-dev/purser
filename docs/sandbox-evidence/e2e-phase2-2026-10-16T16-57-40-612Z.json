@@ -1,0 +1,52 @@
+{
+  "environment": "PayPal sandbox",
+  "toolkit": "1.11.0",
+  "checks": [
+    {
+      "step": "buyer payments captured",
+      "pass": true,
+      "detail": [
+        {
+          "order": "3RW05251DB4152144",
+          "capture": "6S594323XM916764N",
+          "cents": 27650
+        },
+        {
+          "order": "2GX29385XW0639642",
+          "capture": "4UY912732Y076580C",
+          "cents": 27650
+        }
+      ]
+    },
+    {
+      "step": "capture 6S594323XM916764N COMPLETED in the sandbox",
+      "pass": true
+    },
+    {
+      "step": "re-capture with the same request id is idempotent (no second charge)",
+      "pass": true,
+      "detail": {
+        "http": 200
+      }
+    },
+    {
+      "step": "capture 4UY912732Y076580C COMPLETED in the sandbox",
+      "pass": true
+    },
+    {
+      "step": "re-capture with the same request id is idempotent (no second charge)",
+      "pass": true,
+      "detail": {
+        "http": 200
+      }
+    },
+    {
+      "step": "drop-out refunded on the original capture",
+      "pass": false
+    },
+    {
+      "step": "dropped payer's position is zero",
+      "pass": false
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import { FixturePayPal } from "../server/paypal/fixtures.ts";
 import { LivePayPal } from "../server/paypal/live.ts";
 import { Bus, Store } from "../server/store.ts";
 import { Treasury } from "../server/treasury.ts";
+import { computeLedger } from "../server/domain/ledger.ts";
 import { byName, fakeCapture, sampleEvent } from "./helpers.ts";
 
 // Failure paths: double submits, declined payments, replaced requests, network
@@ -149,6 +150,48 @@ test("declined payment: nothing captured, the payer is sent back to PayPal and c
     assert.equal(o.capturedCents, 27650);
     assert.equal(ev.orders.filter((x) => x.participantId === sam.id).length, 1);
     assert.ok(ev.audit.some((x) => x.action === "Payment declined"));
+  } finally {
+    await app.close();
+  }
+});
+
+test("a refund whose answer was lost is recorded from PayPal, never sent twice", async () => {
+  const { app, base } = await start();
+  try {
+    const v = await (await get(base, "/api/demo", { method: "POST" })).json();
+    const priya = v.event.participants.find((p: any) => p.name === "Priya");
+    const go = await form(base, new URL(v.payLinks[priya.id]).pathname, "");
+    const order = new URL(go.headers.get("location")!).searchParams.get("token")!;
+    const ok = await form(base, "/sandbox-sim/checkout", `token=${order}&action=approve`);
+    await get(base, pathOf(ok.headers.get("location")!));
+    await sleep(30);
+    const ev = app.store.event(v.event.id)!;
+    assert.equal(ev.orders.find((x) => x.id === order)!.capturedCents, 27650);
+    // PayPal refunds, but the answer never reaches Purser (timeout, dropped connection).
+    const pp = app.pp as any;
+    const real = pp.callTool.bind(pp);
+    let lose = true;
+    pp.emit = () => undefined; // no webhook either (none is registered for a local live run)
+    pp.callTool = async (name: string, args: any) => {
+      const r = await real(name, args);
+      if (name === "create_refund" && lose) {
+        lose = false;
+        throw new TypeError("fetch failed");
+      }
+      return r;
+    };
+    await form(base, `/api/events/${ev.id}/participants/${priya.id}/drop`, "");
+    const run = async () => (await get(base, `/api/events/${ev.id}/agent`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ instruction: "Settle Priya" }) })).json();
+    await run();
+    assert.equal(ev.refunds.length, 0, "the lost answer is not booked");
+    const second = await run();
+    assert.ok(second.trace.some((s: any) => /already holds a refund/.test(s.outcome?.error ?? "")), "the retry finds the refund instead of sending another");
+    await run();
+    const onPayPal = (await pp.getOrder(order)).data.purchase_units[0].payments.refunds;
+    assert.equal(onPayPal.length, 1, "PayPal holds exactly one refund");
+    assert.equal(ev.refunds.length, 1);
+    assert.equal(ev.refunds[0].amountCents, 27650 - 18500);
+    assert.equal(computeLedger(ev).rows.find((r) => r.name === "Priya")!.positionCents, 0);
   } finally {
     await app.close();
   }
