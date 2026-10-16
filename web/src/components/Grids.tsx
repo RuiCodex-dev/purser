@@ -53,7 +53,7 @@ function Position(p: ICellRendererParams) {
   if (p.node.rowPinned) return <b>{money(Math.round(v * 100), cur)}</b>;
   if (v > 0) return <span className="pos-owes">owes {money(Math.round(v * 100), cur)}</span>;
   if (v < 0) return <span className="pos-owed">owed {money(Math.round(-v * 100), cur)}</span>;
-  return <span className="pos-square">square</span>;
+  return <span className="pos-square" title="Nothing owed either way">{money(0, cur)}</span>;
 }
 
 function StateChip(p: ICellRendererParams) {
@@ -135,8 +135,8 @@ export const LedgerGrid = forwardRef<LedgerGridHandle, { view: EventView; copyLi
       { field: "fronted", hide: true, filter: "agNumberColumnFilter" },
       { field: "paid", headerName: "Paid in", valueFormatter: usd(cur), type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 88, flex: 1 },
       { field: "received", headerName: "Paid out", valueFormatter: usd(cur), type: "numericColumn", enableCellChangeFlash: true, minWidth: 88, flex: 1 },
-      { field: "position", headerName: "Position", cellRenderer: Position, type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 122, flex: 1.2 },
-      { field: "state", headerName: "State", cellRenderer: StateChip, filter: "agTextColumnFilter", minWidth: 138, flex: 1.3, enableCellChangeFlash: true, tooltipValueGetter: (p) => (p.data?.order ? `PayPal order ${p.data.order.id}: ${p.data.order.status}` : "") },
+      { field: "position", headerName: "Position", cellRenderer: Position, type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 158, flex: 1.4 },
+      { field: "state", headerName: "State", cellRenderer: StateChip, filter: "agTextColumnFilter", minWidth: 178, flex: 1.5, enableCellChangeFlash: true, tooltipValueGetter: (p) => (p.data?.order ? `PayPal order ${p.data.order.id}: ${p.data.order.status}` : "") },
       { colId: "actions", headerName: "", cellRenderer: Actions, width: 100, sortable: false, resizable: false },
     ],
     [cur],

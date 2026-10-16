@@ -108,7 +108,7 @@ export function App() {
           </span>
           <span>
             <i className={`dot ${health?.ai.configured ? "on" : "off"}`} />
-            {health?.ai.configured ? `Gemini ${String(health.ai.model).replace("gemini-", "")}` : "No model key: rules engine"}
+            {health?.ai.configured ? `Gemini ${String(health.ai.model).replace("gemini-", "").replace(/-/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase())}` : "No model key: rules engine"}
           </span>
           <span style={{ fontSize: 11 }}>{health?.paypal.toolkit}</span>
         </div>
