@@ -9,6 +9,13 @@
   the project working, no third-party copyrighted music.
 - Every publish, upload and submit step below needs the owner's separate approval.
 
+## Published 2026-10-16 (owner said "hepsini yap")
+
+- Repo: https://github.com/RuiCodex-dev/purser (public, MIT detected)
+- Video: https://youtu.be/3e2EhTpMcA0 (public, @RuiCodex)
+- Demo: https://purser.ruicodex.com (no-keys mode)
+- Devpost: see section 5 below
+
 ## Status 2026-10-16 (RUI-219)
 
 - Sandbox app exists; keys in `C:/Users/Admin/.ruicodex-keys/purser.env.json`. Live checks:

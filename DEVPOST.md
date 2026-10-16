@@ -1,16 +1,15 @@
 # Devpost submission: Purser
 
 Paste-ready text for https://paypalaihackathon.devpost.com/ ("Enter a submission").
-Fields marked TODO are filled in after the owner approves publishing (repo URL, video URL,
-optional hosted demo URL).
+All links are live.
 
 - **Project name:** Purser
 - **Tagline (max ~60 chars):** The AI treasurer for group trips, with a mandate it can't break
 - **Built by:** Rui Codex (solo)
-- **Repository:** TODO (public GitHub repo, MIT licence)
-- **Demo video:** TODO (YouTube, public, 2:23; file `video/purser-demo.mp4`, captions `video/purser-demo.en.srt`)
-- **Hosted demo:** optional (plan in `docs/HOSTING_PLAN.md`, needs approval); full run instructions in the README (works with no keys)
-- **Try it out links:** repository URL
+- **Repository:** https://github.com/RuiCodex-dev/purser (public, MIT)
+- **Demo video:** https://youtu.be/3e2EhTpMcA0 (public, 2:23, English captions)
+- **Hosted demo:** https://purser.ruicodex.com (no-keys mode: offline fixtures of the sandbox contracts, reset nightly)
+- **Try it out links:** https://purser.ruicodex.com, https://github.com/RuiCodex-dev/purser
 - **Built with (tags):** paypal, paypal-agent-toolkit, paypal-orders, paypal-payouts,
   paypal-invoicing, paypal-webhooks, gemini, ag-grid, react, typescript, node.js
 
@@ -145,7 +144,7 @@ payouts sent to them.
 ## Testing instructions (for judges)
 
 ```sh
-git clone <repo> && cd purser
+git clone https://github.com/RuiCodex-dev/purser && cd purser
 npm ci && npm run build && npm start     # Node 22.18+
 ```
 

@@ -1,4 +1,11 @@
-# Hosted demo plan (not deployed; needs the owner's approval)
+# Hosted demo
+
+**Deployed 2026-10-16 (owner approved): https://purser.ruicodex.com**, option A (no keys,
+offline fixtures). Docker container `purser` on the side-services host behind nginx `:9086`
+and the IIS site `purser.ruicodex.com` with a win-acme certificate; data reset nightly. The
+exact pieces and the removal steps are recorded in the owner's private infrastructure notes.
+
+The original plan follows.
 
 The official rules do **not** require a hosted demo: "Your project does not need to be
 publicly hosted or deployed - but judges must be able to actually run or interact with a
@@ -61,5 +68,6 @@ docker run -d --name purser --restart unless-stopped -p 127.0.0.1:8790:8790 \
 - [ ] No key in page source, responses or logs (`/api/health` reports only modes).
 - [ ] Add the URL to `DEVPOST.md` ("Try it out") and the README.
 
-Nothing in this file has been executed. Deploying needs the owner's explicit approval
-(approval C in `PUBLISH_CHECKLIST.md`).
+Verified after deploying: health 200 over a Let's Encrypt certificate, the full demo flow in a
+browser (pay, capture, drop-out, ask, delete) with no console errors and no failed requests,
+and Server-Sent Events arriving through both proxies (33 events for one treasurer run).

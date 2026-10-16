@@ -9,6 +9,10 @@ before it reaches PayPal.
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/) (Oct-Nov 2026)
 by Rui Codex. New code, written for this hackathon. MIT licence.
 
+- **Demo video (2:23):** https://youtu.be/3e2EhTpMcA0
+- **Try it (no-keys demo, reset nightly):** https://purser.ruicodex.com
+- **Repository:** https://github.com/RuiCodex-dev/purser
+
 ![Purser after a treasurer run: ledger, PayPal objects and the agent's trace](docs/screenshots/event.png)
 
 ## What it does
