@@ -202,6 +202,98 @@ export function groundingIssues(d: EventDraft, text: string): string[] {
   return out;
 }
 
+const EMAIL_G = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
+
+/**
+ * Repairs one known model glitch before grounding: a name with junk or an email
+ * glued on ("Lakeside Rentals shelterEmail rentals@lakeside.example"). The name is
+ * cut back to its longest leading run of words that appears in the brief, and a
+ * glued email is kept only if the brief contains it. Anything repaired is grounded
+ * by construction; anything else still has to pass groundingIssues.
+ */
+export function repairNames(d: EventDraft, text: string): number {
+  const hay = text.toLowerCase();
+  let fixed = 0;
+  const cut = (v?: string): { name?: string; email?: string } => {
+    if (!v || hay.includes(v.trim().toLowerCase())) return { name: v };
+    const email = (v.match(EMAIL_G) ?? []).find((e) => hay.includes(e.toLowerCase()));
+    // Only a value that shows leaked structure (an email, or a camelCase field name
+    // glued to a word) is repaired; otherwise "Theo Partners" could become "Theo".
+    const alien = (ch: string) => !hay.includes(ch.toLowerCase());
+    if (!/@|[a-z][A-Z]/.test(v) && ![...v].some(alien)) return { name: v };
+    const words = [...v.replace(EMAIL_G, " ").replace(/([a-z])([A-Z])/g, "$1 $2")]
+      .map((ch) => (alien(ch) ? " " : ch))
+      .join("")
+      .trim()
+      .split(/\s+/);
+    for (let n = words.length; n > 0; n--) {
+      const cand = words.slice(0, n).join(" ").replace(/[\s,;:(]+$/, "");
+      if (cand.length >= 2 && hay.includes(cand.toLowerCase())) {
+        fixed++;
+        return { name: cand, email };
+      }
+    }
+    return { name: v };
+  };
+  for (const i of d.items ?? []) {
+    const r = cut(i.vendorName);
+    i.vendorName = r.name;
+    if (r.email && !i.vendorEmail) i.vendorEmail = r.email;
+    i.paidBy = cut(i.paidBy).name;
+  }
+  for (const sp of d.sponsors ?? []) {
+    const r = cut(sp.name);
+    sp.name = r.name!;
+    if (r.email && !sp.email) sp.email = r.email;
+  }
+  return fixed;
+}
+
+/**
+ * A vendor or sponsor the brief gives an email for must keep it: if the model
+ * dropped it, take the first email written right after the name, within the same
+ * sentence. Without this, a payout would go to a generated placeholder address.
+ */
+export function restoreEmails(d: EventDraft, text: string): void {
+  const near = (name?: string): string | undefined => {
+    if (!name) return undefined;
+    const at = text.toLowerCase().indexOf(name.trim().toLowerCase());
+    if (at < 0) return undefined;
+    const window = text.slice(at, at + name.length + 80).split(/\n|[.!?](?=\s|$)/)[0];
+    return window.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/)?.[0];
+  };
+  for (const i of d.items ?? []) if (i.vendorName && !i.vendorEmail) i.vendorEmail = near(i.vendorName);
+  for (const sp of d.sponsors ?? []) if (!sp.email) sp.email = near(sp.name);
+}
+
+/**
+ * Cross-checks a model draft against the strict parser: when both found the same
+ * vendor or sponsor, a name the model shortened is completed and an email the
+ * model dropped is restored, so a payout never goes to a placeholder address
+ * while the brief states the real one.
+ */
+export function crossFill(d: EventDraft, offline: EventDraft): void {
+  const vendors = (offline.items ?? []).filter((i) => i.vendorName);
+  const same = (a: string, b: string) => {
+    const x = a.trim().toLowerCase();
+    const y = b.trim().toLowerCase();
+    return x === y || y.startsWith(x + " ") || x.startsWith(y + " ");
+  };
+  for (const i of d.items ?? []) {
+    if (!i.vendorName) continue;
+    const o = vendors.find((x) => same(x.vendorName!, i.vendorName!));
+    if (!o) continue;
+    if (o.vendorName!.length > i.vendorName.length) i.vendorName = o.vendorName;
+    if (!i.vendorEmail && o.vendorEmail) i.vendorEmail = o.vendorEmail;
+  }
+  for (const sp of d.sponsors ?? []) {
+    const o = (offline.sponsors ?? []).find((x) => same(x.name, sp.name));
+    if (!o) continue;
+    if (o.name.length > sp.name.length) sp.name = o.name;
+    if (!sp.email && o.email) sp.email = o.email;
+  }
+}
+
 export async function parseBrief(
   text: string,
   llm: Gemini,
@@ -223,9 +315,12 @@ export async function parseBrief(
       d.participants ??= [];
       d.dateLabel ??= "";
       d.location ??= "";
+      repairNames(d, text);
+      const offline = parseBriefOffline(text);
+      if (!offline.issues.length) crossFill(d, offline.draft);
+      restoreEmails(d, text);
       const issues = [...checkDraft(d), ...groundingIssues(d, text)];
       if (!issues.length) return { draft: d, issues, by: "model", model: r.model };
-      const offline = parseBriefOffline(text);
       if (!offline.issues.length) return { ...offline, by: "parser", note: `Model draft failed checks (${issues[0]}); used the offline parser` };
       return { draft: d, issues, by: "model", model: r.model };
     }

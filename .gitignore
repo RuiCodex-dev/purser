@@ -12,3 +12,5 @@ video/hyperframes/assets/clips/
 design/gen/
 coverage/
 .DS_Store
+qa/run-data/
+qa/rec/

@@ -152,3 +152,55 @@ test("mandate: invoices only to pledged sponsors for the pledged amount", () => 
   assert.equal(inv("events@ridgeline.example", 50000).verdict, "deny");
   assert.equal(inv("someone@else.example", 20000).verdict, "deny");
 });
+
+test("grounding repair: a glued-on token is cut back to the name in the brief, inventions still fail", async () => {
+  const { repairNames, groundingIssues, SAMPLE_BRIEF: brief } = await import("../server/ai/brief.ts");
+  const d: any = {
+    participants: [],
+    items: [{ label: "Boat", kind: "shared", amount: 260, refundable: true, vendorName: "Lakeside Rentals shelterEmail rentals@lakeside.example" }],
+    sponsors: [{ name: "Ridgeline Outfitters", amount: 200, email: "events@ridgeline.example" }, { name: "Theo Partners", amount: 50 }],
+  };
+  repairNames(d, brief);
+  assert.equal(d.items[0].vendorName, "Lakeside Rentals");
+  assert.equal(d.items[0].vendorEmail, "rentals@lakeside.example");
+  const issues = groundingIssues(d, brief);
+  assert.deepEqual(issues, ['Sponsor "Theo Partners" is not in the brief'], "an invented sponsor is never repaired into existence");
+});
+
+test("grounding repair: stray non-brief characters are cut, and the strict parser restores a dropped email", async () => {
+  const { repairNames, crossFill, groundingIssues, SAMPLE_BRIEF: brief } = await import("../server/ai/brief.ts");
+  const offline = parseBriefOffline(brief).draft;
+  const d: any = {
+    participants: [],
+    items: [
+      { label: "Boat", kind: "shared", amount: 260, refundable: true, vendorName: "Lakeside Rentals假装," },
+      { label: "Boat 2", kind: "shared", amount: 1, refundable: true, vendorName: "Lakeside" },
+    ],
+    sponsors: [{ name: "Ridgeline", amount: 200 }],
+  };
+  repairNames(d, brief);
+  crossFill(d, offline);
+  assert.equal(d.items[0].vendorName, "Lakeside Rentals");
+  assert.equal(d.items[1].vendorName, "Lakeside Rentals");
+  assert.equal(d.items[1].vendorEmail, "rentals@lakeside.example");
+  assert.equal(d.sponsors[0].name, "Ridgeline Outfitters");
+  assert.equal(d.sponsors[0].email, "events@ridgeline.example");
+  assert.deepEqual(groundingIssues(d, brief), []);
+});
+
+test("grounding repair: an email the model dropped is restored from the vendor's own sentence", async () => {
+  const { restoreEmails } = await import("../server/ai/brief.ts");
+  const text = "We owe Alpine Vans (bookings@alpinevans.example) $540 for the shuttle. Our employer Northwind chips in $300 (hr@northwind.example). Theo Cafe gets $20.";
+  const d: any = {
+    participants: [],
+    items: [
+      { label: "Shuttle", kind: "shared", amount: 540, refundable: true, vendorName: "Alpine Vans" },
+      { label: "Coffee", kind: "shared", amount: 20, refundable: true, vendorName: "Theo Cafe" },
+    ],
+    sponsors: [{ name: "Northwind", amount: 300 }],
+  };
+  restoreEmails(d, text);
+  assert.equal(d.items[0].vendorEmail, "bookings@alpinevans.example");
+  assert.equal(d.items[1].vendorEmail, undefined, "no email in its sentence: none is borrowed from another one");
+  assert.equal(d.sponsors[0].email, "hr@northwind.example");
+});

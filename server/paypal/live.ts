@@ -19,6 +19,16 @@ export const TOOLKIT_ACTIONS = {
   transactions: { list: true },
 };
 
+/**
+ * PayPal puts the machine-readable reason (INSTRUMENT_DECLINED, ORDER_ALREADY_CAPTURED...)
+ * in details[].issue and a generic sentence in message; keep both.
+ */
+export function describeError(data: any, status: number): string {
+  const issues = Array.isArray(data?.details) ? data.details.map((d: any) => d?.issue).filter(Boolean) : [];
+  const msg = data?.message ?? data?.error_description ?? (typeof data?.error === "string" ? data.error : undefined) ?? `HTTP ${status}`;
+  return issues.length ? `${issues.join(", ")}: ${msg}` : String(msg);
+}
+
 export interface LiveConfig {
   clientId: string;
   clientSecret: string;
@@ -104,7 +114,7 @@ export class LivePayPal implements PayPalPort {
       status: res.status,
       data,
       debugId,
-      error: res.ok ? undefined : (data?.message ?? data?.error_description ?? `HTTP ${res.status}`),
+      error: res.ok ? undefined : describeError(data, res.status),
     };
   }
 
@@ -124,7 +134,7 @@ export class LivePayPal implements PayPalPort {
     }
     // The toolkit reports failures as JSON rather than throwing.
     const err = data?.error ?? (data?.ok === false ? data : undefined);
-    if (err) return { ok: false, status: Number(err.status ?? 400), data, error: String(err.message ?? JSON.stringify(err)).slice(0, 400) };
+    if (err) return { ok: false, status: Number(err.status ?? 400), data, error: describeError(err, Number(err.status ?? 400)).slice(0, 400) };
     if (data?.status === "error") return { ok: false, status: 400, data, error: "Capture failed" };
     return { ok: true, status: 200, data };
   }
