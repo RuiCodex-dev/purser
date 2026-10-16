@@ -204,7 +204,21 @@ export class Treasury {
 
   // ---- the guarded executor ----------------------------------------------------
 
-  async run(ev: PurserEvent, name: string, args: Record<string, any>, actor: Actor, opts: { approvalId?: string } = {}): Promise<Outcome> {
+  /** One money move at a time per event: the mandate is evaluated and the call made under the same lock. */
+  private locks = new Map<string, Promise<unknown>>();
+
+  run(ev: PurserEvent, name: string, args: Record<string, any>, actor: Actor, opts: { approvalId?: string } = {}): Promise<Outcome> {
+    const prev = this.locks.get(ev.id) ?? Promise.resolve();
+    const next = prev.catch(() => undefined).then(() => this.runUnlocked(ev, name, args, actor, opts));
+    const tail = next.catch(() => undefined);
+    this.locks.set(ev.id, tail);
+    void tail.then(() => {
+      if (this.locks.get(ev.id) === tail) this.locks.delete(ev.id);
+    });
+    return next;
+  }
+
+  private async runUnlocked(ev: PurserEvent, name: string, args: Record<string, any>, actor: Actor, opts: { approvalId?: string }): Promise<Outcome> {
     const n = this.normalize(ev, name, args);
     if ("error" in n) {
       this.audit(ev, { actor, action: name, detail: `Rejected: ${n.error}`, verdict: "deny" });
@@ -237,7 +251,14 @@ export class Treasury {
       return { ...base, approvalId: approval.id, summary: `QUEUED for organizer approval (${approval.id}): ${d.reasons.join("; ")}` };
     }
 
-    const r = await this.dispatch(ev, name, n.action, n.call);
+    let r: CallResult;
+    try {
+      r = await this.dispatch(ev, name, n.action, n.call);
+    } catch (e) {
+      // A network failure or timeout is not a PayPal answer. Nothing is recorded
+      // in the ledger, and the next run re-plans from what PayPal confirmed.
+      r = { ok: false, status: 0, data: null, error: `Could not reach PayPal (${(e as Error).message || "network error"}); nothing was recorded, try again` };
+    }
     const paypalId = this.idOf(name, r);
     this.audit(ev, {
       actor,
@@ -360,7 +381,7 @@ export class Treasury {
 
   recordOrder(ev: PurserEvent, participantId: string, amountCents: Cents, data: any, via: OrderRec["via"]) {
     for (const o of ev.orders)
-      if (o.participantId === participantId && ["CREATED", "PAYER_ACTION_REQUIRED"].includes(o.status)) o.status = "SUPERSEDED";
+      if (o.participantId === participantId && (["CREATED", "PAYER_ACTION_REQUIRED"].includes(o.status) || (o.status === "APPROVED" && o.declinedAt))) o.status = "SUPERSEDED";
     const link = (data.links ?? []).find((l: any) => l.rel === "payer-action" || l.rel === "approve");
     ev.orders.push({
       id: data.id,
@@ -427,8 +448,16 @@ export class Treasury {
         ev = this.findEventFor((x) => x.orders.some((o) => o.id === r.id));
         if (ev) {
           const o = ev.orders.find((x) => x.id === r.id)!;
+          if (o.status === "SUPERSEDED") {
+            // The payer approved an older request whose amount the ledger has since
+            // changed. Never capture it: an uncaptured approval charges nothing and lapses.
+            this.audit(ev, { actor: "webhook", action: "Ignored approval of a replaced request", detail: `${e.event_type} (${source}); the payer is asked for the current amount instead`, paypalId: r.id, amountCents: o.amountCents });
+            this.touch(ev);
+            return { handled: true, eventId: ev.id };
+          }
           if (o.status !== "COMPLETED") {
             o.status = "APPROVED";
+            o.declinedAt = undefined; // a fresh approval, possibly with another funding source
             this.audit(ev, { actor: "webhook", action: "Order approved", detail: `${e.event_type} (${source})`, paypalId: r.id, amountCents: o.amountCents });
             await this.capture(ev, r.id, "system");
           }
@@ -495,7 +524,8 @@ export class Treasury {
       if (!r.ok) continue;
       const before = o.status;
       this.applyOrder(ev, r.data);
-      if (o.status === "APPROVED") await this.capture(ev, o.id, "system");
+      // A declined approval waits for the payer to pick another funding source.
+      if (o.status === "APPROVED" && !o.declinedAt) await this.capture(ev, o.id, "system");
       if (o.status !== before) changes++;
     }
     const batches = new Set(ev.payouts.filter((p) => ["PENDING", "PROCESSING", "UNCLAIMED", "ONHOLD"].includes(p.status.toUpperCase())).map((p) => p.batchId));

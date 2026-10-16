@@ -352,12 +352,23 @@ export function createApp(cfg: Config, opts: { webRoot?: string } = {}): App {
       const token = ev.payTokens[pid];
       const o = ev.orders.find((x) => x.id === orderId && x.participantId === pid);
       if (!o) return redirect(res, `/pay/${token}?error=${encodeURIComponent("That order is not yours.")}`);
+      if (o.status === "SUPERSEDED")
+        return redirect(res, `/pay/${token}?error=${encodeURIComponent("That payment request was replaced by one for the current amount. Nothing was charged; press Pay to continue.")}`);
       if (o.status !== "COMPLETED") {
         const fresh = await pp.getOrder(orderId);
         if (fresh.ok) treasury.applyOrder(ev, fresh.data);
         const r = await treasury.capture(ev, orderId, "payer");
-        if (r && !(r.executed && r.ok) && ev.orders.find((x) => x.id === orderId)?.status !== "COMPLETED")
+        if (r && !(r.executed && r.ok) && ev.orders.find((x) => x.id === orderId)?.status !== "COMPLETED") {
+          if (/INSTRUMENT_DECLINED/.test(r.error ?? "")) {
+            // PayPal's guidance: send the buyer back to the same approval page to pick
+            // another funding source. Nothing was charged.
+            o.declinedAt = new Date().toISOString();
+            treasury.audit(ev, { actor: "payer", action: "Payment declined", detail: "INSTRUMENT_DECLINED at capture; the payer can choose another funding source", paypalId: o.id, amountCents: o.amountCents });
+            treasury.touch(ev);
+            return redirect(res, `/pay/${token}?error=${encodeURIComponent("PayPal declined that payment method and nothing was charged. Press Pay to choose another way to pay.")}`);
+          }
           return redirect(res, `/pay/${token}?error=${encodeURIComponent(r.error ?? r.reasons.join("; "))}`);
+        }
       }
       return redirect(res, `/pay/${token}?done=1`);
     }
@@ -371,14 +382,23 @@ export function createApp(cfg: Config, opts: { webRoot?: string } = {}): App {
       if (method === "POST") {
         const row = computeLedger(ev).rows.find((r) => r.participantId === pid)!;
         if (row.positionCents <= 0) return redirect(res, `/pay/${token}`);
-        let open = row.openOrder && row.openOrder.amountCents === row.positionCents && row.openOrder.status === "PAYER_ACTION_REQUIRED" ? row.openOrder : undefined;
+        const openFor = (r: typeof row) =>
+          r.openOrder &&
+          r.openOrder.amountCents === r.positionCents &&
+          (r.openOrder.status === "PAYER_ACTION_REQUIRED" || (r.openOrder.status === "APPROVED" && r.openOrder.declinedAt)) &&
+          r.openOrder.approveUrl
+            ? r.openOrder
+            : undefined;
+        let open = openFor(row);
         if (!open) {
           const intent = plan(ev).find((i) => i.kind === "collect" && i.participantId === pid);
           if (!intent) return redirect(res, `/pay/${token}`);
           const call = treasury.toolCallFor(ev, intent);
           const out = await treasury.run(ev, call.name, call.args, "payer");
-          if (!out.executed || !out.ok) return redirect(res, `/pay/${token}?error=${encodeURIComponent(out.error ?? out.reasons.join("; "))}`);
-          open = ev.orders.find((o) => o.id === out.paypalId);
+          // A double click (or a second tab) races the first request: once the first
+          // order exists the mandate refuses a second one, so use the order it made.
+          open = out.executed && out.ok ? ev.orders.find((o) => o.id === out.paypalId) : openFor(computeLedger(ev).rows.find((r) => r.participantId === pid)!);
+          if (!open) return redirect(res, `/pay/${token}?error=${encodeURIComponent(out.error ?? out.reasons.join("; "))}`);
         }
         if (!open?.approveUrl) return redirect(res, `/pay/${token}?error=${encodeURIComponent("PayPal did not return an approval link.")}`);
         return redirect(res, open.approveUrl);
@@ -393,14 +413,15 @@ export function createApp(cfg: Config, opts: { webRoot?: string } = {}): App {
         if (!r.ok) return html(res, 404, messagePage("Unknown order", "The simulator has no such order."));
         const ev = store.data.events.find((e) => e.orders.some((o) => o.id === id));
         const who = ev?.participants.find((x) => x.id === ev.orders.find((o) => o.id === id)?.participantId)?.name;
-        if (r.data.status !== "PAYER_ACTION_REQUIRED") return html(res, 200, messagePage("Already handled", `This order is ${r.data.status}.`));
+        const reapprove = r.data.status === "APPROVED" && ev?.orders.find((o) => o.id === id)?.declinedAt;
+        if (r.data.status !== "PAYER_ACTION_REQUIRED" && !reapprove) return html(res, 200, messagePage("Already handled", `This order is ${r.data.status}.`));
         return html(res, 200, simCheckoutPage(r.data, ev, who));
       }
       if (method === "POST") {
         const b = await body(req);
         const id = String(b.token ?? "");
-        if (b.action === "approve") {
-          const back = fixtures.approveOrder(id);
+        if (b.action === "approve" || b.action === "decline") {
+          const back = fixtures.approveOrder(id, { decline: b.action === "decline" });
           return back ? redirect(res, back) : html(res, 409, messagePage("Cannot approve", "This order is not waiting for approval."));
         }
         const cancel = fixtures.cancelUrlFor(id);

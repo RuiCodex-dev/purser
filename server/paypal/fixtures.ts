@@ -190,10 +190,14 @@ export class FixturePayPal implements PayPalPort {
   }
 
   /** Simulator: the buyer approved on the checkout page. Returns the merchant's return URL. */
-  approveOrder(id: string): string | undefined {
+  approveOrder(id: string, opts: { decline?: boolean } = {}): string | undefined {
     const o = this.s.orders[id];
-    if (!o || o.status !== "PAYER_ACTION_REQUIRED") return undefined;
+    // An order that was approved and then declined at capture goes back to the
+    // buyer for another funding source, exactly as the sandbox asks merchants to do.
+    if (!o || !(o.status === "PAYER_ACTION_REQUIRED" || (o.status === "APPROVED" && o._declined))) return undefined;
     o.status = "APPROVED";
+    o._decline = Boolean(opts.decline);
+    o._declined = false;
     o.payer = { payer_id: rid(13), email_address: "sb-buyer@personal.example.com", name: { given_name: "Sandbox", surname: "Buyer" } };
     this.emit("CHECKOUT.ORDER.APPROVED", this.publicOrder(o), "checkout-order", `An order has been approved by buyer.`);
     const ret = o._return_url;
@@ -213,6 +217,12 @@ export class FixturePayPal implements PayPalPort {
     }
     if (o.status !== "APPROVED")
       return this.fail(422, "ORDER_NOT_APPROVED", "Payer has not yet approved the Order for payment.");
+    if (o._decline || o._declined) {
+      // Same contract as the sandbox's negative test INSTRUMENT_DECLINED.
+      o._decline = false;
+      o._declined = true;
+      return this.fail(422, "UNPROCESSABLE_ENTITY", "INSTRUMENT_DECLINED: The instrument presented was either declined by the processor or bank, or it can't be used for this payment.");
+    }
     const pu = o.purchase_units[0];
     const capture = {
       id: rid(17),

@@ -24,6 +24,7 @@ export interface LiveConfig {
   clientSecret: string;
   webhookId?: string;
   base?: string;
+  timeoutMs?: number;
 }
 
 export class LivePayPal implements PayPalPort {
@@ -33,8 +34,10 @@ export class LivePayPal implements PayPalPort {
   private base: string;
 
   private cfg: LiveConfig;
+  private timeoutMs: number;
   constructor(cfg: LiveConfig) {
     this.cfg = cfg;
+    this.timeoutMs = cfg.timeoutMs ?? 30_000;
     this.base = cfg.base ?? "https://api-m.sandbox.paypal.com";
     this.toolkit = new PayPalAgentToolkit({
       clientId: cfg.clientId,
@@ -53,6 +56,7 @@ export class LivePayPal implements PayPalPort {
     const auth = Buffer.from(`${this.cfg.clientId}:${this.cfg.clientSecret}`).toString("base64");
     const res = await fetch(`${this.base}/v1/oauth2/token`, {
       method: "POST",
+      signal: AbortSignal.timeout(this.timeoutMs),
       headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
       body: "grant_type=client_credentials",
     });
@@ -62,14 +66,31 @@ export class LivePayPal implements PayPalPort {
     return this.token.value;
   }
 
-  private async rest(method: string, path: string, body?: unknown, requestId?: string): Promise<CallResult> {
+  /** Forgets the cached OAuth token (used when PayPal says it expired or was revoked). */
+  invalidateToken() {
+    this.token = undefined;
+  }
+
+  private async rest(method: string, path: string, body?: unknown, requestId?: string, retried = false): Promise<CallResult> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${await this.accessToken()}`,
       "Content-Type": "application/json",
       Prefer: "return=representation",
     };
     if (requestId) headers["PayPal-Request-Id"] = requestId;
-    const res = await fetch(`${this.base}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    const res = await fetch(`${this.base}${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(this.timeoutMs),
+    });
+    // An access token can expire or be revoked before our clock says so: fetch a
+    // new one and retry once. The PayPal-Request-Id keeps a retried POST idempotent.
+    if (res.status === 401 && !retried) {
+      await res.arrayBuffer().catch(() => undefined);
+      this.invalidateToken();
+      return this.rest(method, path, body, requestId, true);
+    }
     const text = await res.text();
     let data: any = null;
     try {

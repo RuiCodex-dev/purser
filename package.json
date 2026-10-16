@@ -30,5 +30,8 @@
     "react-dom": "^19.2.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.9"
+  },
+  "overrides": {
+    "mathjs": "15.2.0"
   }
 }

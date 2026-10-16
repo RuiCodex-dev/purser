@@ -62,6 +62,8 @@ export interface OrderRec {
   amountCents: Cents;
   status: "CREATED" | "PAYER_ACTION_REQUIRED" | "APPROVED" | "COMPLETED" | "SUPERSEDED";
   approveUrl?: string;
+  /** Set when PayPal declined the funding source at capture; the payer may approve again. */
+  declinedAt?: string;
   captureId?: string;
   capturedCents: Cents;
   refundedCents: Cents;

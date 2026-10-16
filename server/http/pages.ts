@@ -85,7 +85,7 @@ export function simCheckoutPage(order: any, ev: PurserEvent | undefined, who: st
 <h1>Approve payment</h1><p class="sub">Purser is running without PayPal credentials, so this page stands in for the PayPal sandbox approval screen. Approving sends the same capture call and webhooks the sandbox would.</p>
 <table><tr><td>Order</td><td class="n"><code>${esc(order.id)}</code></td></tr>${ev ? `<tr><td>Merchant</td><td class="n">${esc(ev.name)}</td></tr>` : ""}${who ? `<tr><td>Payer</td><td class="n">${esc(who)}</td></tr>` : ""}
 ${items}${disc ? `<tr class="credit"><td>Credits</td><td class="n">&minus;${disc.toFixed(2)}</td></tr>` : ""}<tr class="total"><td>Total</td><td class="n big">${esc(pu.amount?.value)} ${esc(pu.amount?.currency_code)}</td></tr></table>
-<form method="post" action="/sandbox-sim/checkout"><input type="hidden" name="token" value="${esc(order.id)}"><button class="btn primary" name="action" value="approve" type="submit">Approve as sandbox buyer</button><button class="btn quiet" name="action" value="cancel" type="submit">Cancel and return</button></form></main>`,
+<form method="post" action="/sandbox-sim/checkout"><input type="hidden" name="token" value="${esc(order.id)}"><button class="btn primary" name="action" value="approve" type="submit">Approve as sandbox buyer</button><button class="btn quiet" name="action" value="cancel" type="submit">Cancel and return</button><button class="btn quiet" name="action" value="decline" type="submit" title="Approves, then the bank declines at capture (INSTRUMENT_DECLINED)">Approve with a card that gets declined</button></form></main>`,
   );
 }
 
