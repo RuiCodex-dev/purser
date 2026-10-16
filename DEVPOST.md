@@ -111,8 +111,8 @@ from a photo, and Purser drafts friendly reminders that never lose the amount or
 
 - An agent that can actually move money, with a guarantee that fits in one sentence: it can
   only ever do what the ledger already says is owed.
-- 25 offline tests (full flow over HTTP, the rogue model, double submits, a declined card,
-  a replaced request, network failure, token expiry) plus a 28-check live end-to-end run
+- 27 offline tests (full flow over HTTP, the rogue model, double submits, a declined card,
+  a replaced request, network failure, token expiry, refund idempotency, brief refundability) plus a 28-check live end-to-end run
   against the PayPal sandbox and Gemini (`scripts/live-e2e.ts`, evidence in
   `docs/sandbox-evidence/`). The conservation invariant (what people owe plus sponsor money
   equals every unpaid cost) holds exactly.
@@ -152,7 +152,7 @@ Open http://localhost:8790 > New event > Skip to the demo event > Run the treasu
 person's pay link from the ledger (link icon), pay, approve in the checkout simulator, and
 watch the ledger update. With `PAYPAL_CLIENT_ID`/`PAYPAL_CLIENT_SECRET` (sandbox) and
 `GEMINI_API_KEY` in `.env`, the same flow runs against the real PayPal sandbox and Gemini.
-`npm test` runs the suite offline (25 tests). With sandbox credentials,
+`npm test` runs the suite offline (27 tests). With sandbox credentials,
 `node scripts/live-e2e.ts` runs 28 live checks against the PayPal sandbox and Gemini.
 
 ## Sponsor tools
