@@ -118,12 +118,24 @@ fixtures (offline), apply the PayPal response to the ledger and write an audit e
 the PayPal id and debug id. Every tool result returns the ledger engine's remaining
 `next_steps`, so the model always knows what is left.
 
-Tests: `npm test` (16 tests, about 2 s, no network) - money and split invariants, the
-drop-out maths, every mandate rule, the brief parser and grounding check, a full fixture
-flow over HTTP (pay link -> checkout simulator -> capture exactly once despite return URL
-and webhook racing -> payout settled by webhook -> drop-out refund -> sponsor invoice paid ->
-unsigned webhook refused), and a scripted "rogue" model that tries to pay an attacker,
-overcharge a guest and pay out money not yet collected - all three denied, nothing moved.
+Tests: `npm test` (25 tests, no network) - money and split invariants, the drop-out maths,
+every mandate rule, the brief parser, grounding check and its repairs, a full fixture flow
+over HTTP (pay link -> checkout simulator -> capture exactly once despite return URL and
+webhook racing -> payout settled by webhook -> drop-out refund -> sponsor invoice paid ->
+unsigned webhook refused), a scripted "rogue" model that tries to pay an attacker,
+overcharge a guest and pay out money not yet collected (all three denied, nothing moved),
+and the failure paths: two identical payouts at once (PayPal is called once), a double
+click on a pay link (one order), a card declined at capture (the payer is sent back to
+PayPal for the same order), a payer approving a replaced request (never captured), a
+network failure (audited, nothing recorded) and an expired OAuth token (refreshed once,
+same PayPal-Request-Id).
+
+Live: `node scripts/live-e2e.ts` runs 28 checks against the real PayPal sandbox and Gemini
+(orders through the Agent Toolkit matched to the ledger, the sponsor invoice sent and
+reminded, the reminder cooldown, a pay link landing on PayPal's sandbox checkout, payouts
+and the approval inbox, reconcile, transaction search, request-id idempotency, a sandbox
+`INSTRUMENT_DECLINED`, token refresh). `--continue <event>` checks captures and refunds once
+a sandbox buyer has paid. Evidence: `docs/sandbox-evidence/`.
 
 ## AI tools used
 
@@ -146,7 +158,9 @@ is the running app.
 - Payouts in the sandbox to an address without a sandbox account stay UNCLAIMED, as they
   would in production.
 - Offline fixtures replay documented contracts; they are not PayPal. The mode is always
-  shown, and `scripts/sandbox-check.ts` is how the live sandbox is verified.
+  shown, and `scripts/sandbox-check.ts` and `scripts/live-e2e.ts` are how the live sandbox
+  is verified.
+- A hosted demo is optional under the rules; the plan is in `docs/HOSTING_PLAN.md`.
 
 ## Credits
 

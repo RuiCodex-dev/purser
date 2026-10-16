@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Fraunces"; src: url("assets/fonts/fraunces-var.woff2") format("woff2"); font-weight: 300 700; font-style: normal; }
+      @font-face { font-family: "IBM Plex Sans"; src: url("assets/fonts/plex-sans-var.woff2") format("woff2"); font-weight: 100 700; font-style: normal; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0E1922; }
+      #root { width: 100%; height: 100%; position: relative; overflow: hidden; background: #0E1922; font-family: "IBM Plex Sans", sans-serif; color: #F3EFE6; font-variant-numeric: tabular-nums; }
+      .scene { position: absolute; inset: 0; overflow: hidden; }
+      .paper { background: #F3EFE6; }
+      .night { background: #0E1922; }
+      .eyebrow { font: 600 22px/1 "IBM Plex Sans"; letter-spacing: .22em; text-transform: uppercase; color: #C9A25A; }
+      /* open */
+      #s01_open .print { position: absolute; right: 90px; top: 170px; width: 940px; height: 403px; overflow: hidden; border-radius: 6px; box-shadow: 0 50px 90px -40px rgba(0,0,0,.7); }
+      #s01_open .print img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      #s01_open .copy { position: absolute; left: 120px; top: 250px; width: 700px; }
+      #s01_open h1 { font: 500 160px/0.95 "Fraunces"; letter-spacing: -0.02em; color: #F3EFE6; margin-top: 26px; }
+      #s01_open .sub { font: 400 42px/1.18 "Fraunces"; color: #E9DEC8; margin-top: 26px; }
+      #s01_open .list { position: absolute; left: 120px; right: 90px; top: 690px; display: flex; gap: 0; border-top: 1px solid rgba(243,239,230,.18); }
+      #s01_open .it { flex: 1; padding: 26px 26px 0 0; font: 400 26px/1.3 "IBM Plex Sans"; color: rgba(243,239,230,.82); }
+      #s01_open .it b { display: block; font: 500 40px/1.1 "Fraunces"; color: #F3EFE6; margin-bottom: 8px; }
+      /* app windows */
+      .win-group { position: absolute; left: 180px; top: 34px; width: 1560px; height: 912px; transform-origin: 50% 50%; }
+      .win { position: absolute; inset: 0; border-radius: 14px; background: #FFFDF8; box-shadow: 0 40px 80px -40px rgba(19,33,46,.6), 0 0 0 1px rgba(19,33,46,.14); overflow: hidden; }
+      .win .bar { height: 34px; background: #E6DFD2; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+      .win .bar i { width: 11px; height: 11px; border-radius: 50%; background: #C8BEAD; display: block; }
+      .win .bar span { margin-left: 14px; font: 500 15px/1 "IBM Plex Sans"; color: #56616B; letter-spacing: .03em; }
+      .appvid { position: absolute; left: 0; top: 34px; width: 1560px; height: 878px; border-radius: 0 0 14px 14px; object-fit: cover; }
+      .badge { position: absolute; left: 180px; top: 958px; display: flex; align-items: center; gap: 12px; font: 600 21px/1 "IBM Plex Sans"; color: #13212E; letter-spacing: .02em; }
+      .badge b { width: 12px; height: 12px; border-radius: 50%; display: block; }
+      .badge b.live { background: #1E5B55; box-shadow: 0 0 0 5px rgba(30,91,85,.18); }
+      .badge b.fx { background: #A87A2C; box-shadow: 0 0 0 5px rgba(168,122,44,.2); }
+      .badge em { font-style: normal; font-weight: 500; color: #6A4C17; margin-left: 10px; padding-left: 14px; border-left: 1px solid #DCD5C7; }
+      .callout { position: absolute; display: flex; justify-content: flex-end; }
+      .callout span { display: block; background: #13212E; color: #F3EFE6; font: 500 25px/1.25 "IBM Plex Sans"; padding: 16px 24px; border-radius: 10px; border-left: 5px solid #C9A25A; box-shadow: 0 24px 40px -20px rgba(0,0,0,.55); max-width: 560px; }
+      .callout b { font-weight: 600; color: #E7C27E; }
+      /* mandate */
+      #s07_mandate .copy { position: absolute; left: 120px; top: 120px; width: 690px; }
+      #s07_mandate h2 { font: 500 84px/1 "Fraunces"; letter-spacing: -0.015em; margin-top: 22px; color: #F3EFE6; }
+      .rule { display: flex; gap: 20px; padding: 24px 0; border-top: 1px solid rgba(243,239,230,.16); font: 400 30px/1.3 "IBM Plex Sans"; color: rgba(243,239,230,.9); }
+      .rule .n { font: 500 34px/1.1 "Fraunces"; color: #C9A25A; width: 34px; flex: none; }
+      #s07_mandate .rules { margin-top: 40px; }
+      .term { position: absolute; left: 880px; top: 150px; width: 930px; background: #13212E; border-radius: 14px; box-shadow: 0 50px 90px -40px rgba(0,0,0,.8), 0 0 0 1px rgba(243,239,230,.08); overflow: hidden; }
+      .term .tbar { padding: 16px 22px; background: #182a3a; font: 500 19px/1 ui-monospace, Consolas, monospace; color: #9fb0bd; }
+      .term .body { padding: 18px 22px 26px; }
+      .tl { display: grid; grid-template-columns: 120px 190px 1fr; gap: 14px; align-items: start; padding: 16px 0; border-bottom: 1px dashed rgba(243,239,230,.12); }
+      .tl .v { font: 600 17px/1 "IBM Plex Sans"; letter-spacing: .12em; text-transform: uppercase; padding: 8px 10px; border-radius: 6px; text-align: center; }
+      .tl .v.deny { background: #F6E7E2; color: #A3372A; }
+      .tl .v.allow { background: #E3EEEA; color: #1E5B55; }
+      .tl .tool { font: 500 20px/1.35 ui-monospace, Consolas, monospace; color: #E7C27E; }
+      .tl .msg { font: 400 21px/1.35 "IBM Plex Sans"; color: #E9E4DA; }
+      .tl.foot { display: block; border: 0; padding-top: 20px; font: 500 22px/1.3 ui-monospace, Consolas, monospace; color: #9fd3c7; }
+      .src { position: absolute; left: 880px; top: 860px; font: 400 21px/1.4 "IBM Plex Sans"; color: rgba(243,239,230,.6); width: 930px; }
+      /* end */
+      #s11_end .print { position: absolute; left: 110px; top: 150px; width: 820px; height: 612px; overflow: hidden; border-radius: 6px; box-shadow: 0 50px 90px -40px rgba(0,0,0,.7); }
+      #s11_end .print img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      #s11_end .copy { position: absolute; left: 1030px; top: 230px; width: 800px; }
+      #s11_end .mark { font: 500 170px/0.95 "Fraunces"; letter-spacing: -0.02em; color: #F3EFE6; }
+      #s11_end .tag { margin-top: 26px; font: 400 44px/1.2 "Fraunces"; color: #E9DEC8; }
+      #s11_end .stack { margin-top: 54px; font: 500 24px/1.6 "IBM Plex Sans"; color: rgba(243,239,230,.78); }
+      #s11_end .stack .ln { display: block; }
+      #s11_end .by { margin-top: 40px; font: 600 26px/1 "IBM Plex Sans"; letter-spacing: .22em; text-transform: uppercase; color: #C9A25A; }
+      /* captions */
+      .cap { position: absolute; left: 0; right: 0; bottom: 22px; display: flex; justify-content: center; }
+      .cap span { background: rgba(14,25,34,.86); color: #F3EFE6; font: 500 32px/1.3 "IBM Plex Sans"; padding: 9px 22px; border-radius: 10px; max-width: 1500px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="142.87" data-width="1920" data-height="1080">
+
+      <section class="scene clip night" id="s01_open" data-start="0" data-duration="10.86" data-track-index="1">
+        <div class="print"><img id="open-img" src="assets/img/hero-wide.jpg" alt="" /></div>
+        <div class="copy">
+          <p class="eyebrow" id="open-eb">PayPal AI Hackathon &middot; Rui Codex</p>
+          <h1 id="open-h">Purser</h1>
+          <p class="sub" id="open-sub">The AI treasurer for group events.</p>
+        </div>
+        <div class="list">
+          <div class="it" id="oi1"><b>Fronts the cabin</b>$1,480 on one card</div>
+          <div class="it" id="oi2"><b>Chases eight friends</b>$276.50 each, to the cent</div>
+          <div class="it" id="oi3"><b>Pays the boat</b>a vendor still to be paid</div>
+          <div class="it" id="oi4"><b>Refunds the drop-out</b>only the refundable part</div>
+        </div>
+      </section>
+
+      <section class="scene clip paper" id="s02_home" data-start="10.86" data-duration="8.1" data-track-index="1"></section>
+      <div class="win-group" id="s02_home-win">
+        <div class="win clip" id="s02_home-chrome" data-start="10.86" data-duration="8.1" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v02" class="clip appvid" src="assets/clips/l1_brief.mp4" muted playsinline data-start="10.86" data-duration="8.1" data-media-start="0.0" data-playback-rate="1.0" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s02_home-badge" data-start="10.86" data-duration="8.1" data-track-index="6"><b class="live"></b><span>Live &middot; PayPal sandbox + Gemini</span></div>
+
+      <section class="scene clip paper" id="s03_brief" data-start="18.97" data-duration="17" data-track-index="1"></section>
+      <div class="win-group" id="s03_brief-win">
+        <div class="win clip" id="s03_brief-chrome" data-start="18.97" data-duration="17" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v03" class="clip appvid" src="assets/clips/l1_brief.mp4" muted playsinline data-start="18.97" data-duration="17" data-media-start="8.1" data-playback-rate="2.1" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s03_brief-badge" data-start="18.97" data-duration="17" data-track-index="6"><b class="live"></b><span>Live &middot; PayPal sandbox + Gemini</span><em>2.1&times; speed</em></div>
+
+      <section class="scene clip paper" id="s04_run" data-start="35.97" data-duration="18" data-track-index="1"></section>
+      <div class="win-group" id="s04_run-win">
+        <div class="win clip" id="s04_run-chrome" data-start="35.97" data-duration="18" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v04" class="clip appvid" src="assets/clips/l2_run.mp4" muted playsinline data-start="35.97" data-duration="18" data-media-start="0.0" data-playback-rate="2.5" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s04_run-badge" data-start="35.97" data-duration="18" data-track-index="6"><b class="live"></b><span>Live &middot; PayPal sandbox + Gemini &middot; PayPal Agent Toolkit</span><em>2.5&times; speed</em></div>
+
+      <section class="scene clip paper" id="s05_paypal" data-start="53.97" data-duration="9" data-track-index="1"></section>
+      <div class="win-group" id="s05_paypal-win">
+        <div class="win clip" id="s05_paypal-chrome" data-start="53.97" data-duration="9" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v05a" class="clip appvid" src="assets/clips/l3_paypal.mp4" muted playsinline data-start="53.97" data-duration="3.1" data-media-start="0.0" data-playback-rate="1.0" data-track-index="3"></video><video id="v05b" class="clip appvid" src="assets/clips/l3_paypal.mp4" muted playsinline data-start="57.07" data-duration="5.9" data-media-start="10.4" data-playback-rate="1.0" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s05_paypal-badge" data-start="53.97" data-duration="9" data-track-index="6"><b class="live"></b><span>Live &middot; PayPal sandbox + Gemini &middot; PayPal's own sandbox checkout (we stop before signing in)</span></div>
+
+      <section class="scene clip paper" id="s06_paid" data-start="62.97" data-duration="15" data-track-index="1"></section>
+      <div class="win-group" id="s06_paid-win">
+        <div class="win clip" id="s06_paid-chrome" data-start="62.97" data-duration="15" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v06a" class="clip appvid" src="assets/clips/f1_pay.mp4" muted playsinline data-start="62.97" data-duration="7.6" data-media-start="0.0" data-playback-rate="1.0" data-track-index="3"></video><video id="v06b" class="clip appvid" src="assets/clips/f2_live.mp4" muted playsinline data-start="70.57" data-duration="7.4" data-media-start="0.0" data-playback-rate="1.0" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s06_paid-badge" data-start="62.97" data-duration="15" data-track-index="6"><b class="fx"></b><span>No-keys demo mode &middot; offline fixtures + labelled checkout simulator</span></div>
+
+      <section class="scene clip night" id="s07_mandate" data-start="77.97" data-duration="20" data-track-index="1">
+        <div class="copy">
+          <p class="eyebrow" id="m-eb">The mandate</p>
+          <h2 id="m-h">Checked in plain code, before PayPal.</h2>
+          <div class="rules">
+            <div class="rule" id="r1"><span class="n">1</span><span>An order must match the ledger to the cent.</span></div>
+            <div class="rule" id="r2"><span class="n">2</span><span>Money only goes to people and vendors the ledger owes.</span></div>
+            <div class="rule" id="r3"><span class="n">3</span><span>Nothing leaves the pot before it has arrived.</span></div>
+            <div class="rule" id="r4"><span class="n">4</span><span>Big moves wait for the organizer.</span></div>
+          </div>
+        </div>
+        <div class="term" id="term">
+          <div class="tbar">$ node scripts/rogue-demo.ts &nbsp;&middot;&nbsp; a scripted rogue model vs the real mandate</div>
+          <div class="body">
+          <div class="tl" id="tl0"><span class="v deny">denied</span><span class="tool">create_payout</span><span class="msg">DENIED by the mandate: refund-desk@attacker.example is not a participant, a listed vendor or a trusted payee</span></div>
+          <div class="tl" id="tl1"><span class="v deny">denied</span><span class="tool">create_order</span><span class="msg">DENIED by the mandate: The ledger says Priya owes $276.50, not $999.00 (ledger expects $276.50)</span></div>
+          <div class="tl" id="tl2"><span class="v allow">allowed</span><span class="tool">create_order</span><span class="msg">OK create_order 167LZ1S29LPHRDL6F: Matches the ledger: Priya owes $276.50</span></div>
+          <div class="tl" id="tl3"><span class="v deny">denied</span><span class="tool">create_payout</span><span class="msg">DENIED by the mandate: The pot holds $0.00; this payout waits until the money is collected</span></div>
+          <div class="tl foot" id="tl4">payouts sent: 0   orders created: 1</div>
+          </div>
+        </div>
+        <p class="src" id="m-src">Output of the repository's own script (same scenario as test/agent.test.ts). Each denial goes back to the model with the ledger's expected value.</p>
+      </section>
+
+      <section class="scene clip paper" id="s08_payouts" data-start="97.97" data-duration="13" data-track-index="1"></section>
+      <div class="win-group" id="s08_payouts-win">
+        <div class="win clip" id="s08_payouts-chrome" data-start="97.97" data-duration="13" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v08" class="clip appvid" src="assets/clips/f3_payouts.mp4" muted playsinline data-start="97.97" data-duration="13" data-media-start="0.0" data-playback-rate="3.5" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s08_payouts-badge" data-start="97.97" data-duration="13" data-track-index="6"><b class="fx"></b><span>No-keys demo mode &middot; offline fixtures + labelled checkout simulator</span><em>3.5&times; speed</em></div>
+
+      <section class="scene clip paper" id="s09_dropout" data-start="110.97" data-duration="13" data-track-index="1"></section>
+      <div class="win-group" id="s09_dropout-win">
+        <div class="win clip" id="s09_dropout-chrome" data-start="110.97" data-duration="13" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v09" class="clip appvid" src="assets/clips/f4_dropout.mp4" muted playsinline data-start="110.97" data-duration="13" data-media-start="0.0" data-playback-rate="1.65" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s09_dropout-badge" data-start="110.97" data-duration="13" data-track-index="6"><b class="fx"></b><span>No-keys demo mode &middot; offline fixtures + labelled checkout simulator</span><em>1.6&times; speed</em></div>
+
+      <section class="scene clip paper" id="s10_ask" data-start="123.97" data-duration="11" data-track-index="1"></section>
+      <div class="win-group" id="s10_ask-win">
+        <div class="win clip" id="s10_ask-chrome" data-start="123.97" data-duration="11" data-track-index="2"><div class="bar"><i></i><i></i><i></i><span>Purser &middot; localhost</span></div></div>
+        <video id="v10" class="clip appvid" src="assets/clips/f5_ask.mp4" muted playsinline data-start="123.97" data-duration="11" data-media-start="0.0" data-playback-rate="1.7" data-track-index="3"></video>
+      </div>
+      <div class="badge clip" id="s10_ask-badge" data-start="123.97" data-duration="11" data-track-index="6"><b class="fx"></b><span>No-keys demo mode &middot; offline fixtures + labelled checkout simulator</span><em>1.7&times; speed</em></div>
+
+      <section class="scene clip night" id="s11_end" data-start="134.97" data-duration="7.9" data-track-index="1">
+        <div class="print"><img id="end-img" src="assets/img/cabin.jpg" alt="" /></div>
+        <div class="copy">
+          <div class="mark" id="end-mark">Purser</div>
+          <p class="tag" id="end-tag">The treasurer you can trust with the trip money.</p>
+          <div class="stack" id="end-stack"><span class="ln">PayPal Orders v2 &middot; Invoicing &middot; Payouts &middot; Refunds &middot; Webhooks</span><span class="ln">PayPal Agent Toolkit &middot; Gemini &middot; AG Grid</span></div>
+          <p class="by" id="end-by">Rui Codex</p>
+        </div>
+      </section>
+
+      <div class="callout clip" id="c03a" style="right: 64px; top: 150px;" data-start="22.37" data-duration="5.4" data-track-index="7"><span>Gemini reads the brief into a typed budget</span></div>
+      <div class="callout clip" id="c03b" style="right: 64px; top: 150px;" data-start="31.37" data-duration="4.6" data-track-index="7"><span>Grounding check: every name must be in the brief</span></div>
+      <div class="callout clip" id="c04a" style="right: 64px; top: 150px;" data-start="39.97" data-duration="6.0" data-track-index="7"><span><b>create_order</b> &times; 6 &middot; Agent Toolkit</span></div>
+      <div class="callout clip" id="c04b" style="right: 64px; top: 228px;" data-start="44.97" data-duration="5.0" data-track-index="7"><span><b>create_invoice</b> + <b>send_invoice</b> &middot; sponsor</span></div>
+      <div class="callout clip" id="c04c" style="right: 64px; top: 306px;" data-start="48.97" data-duration="5.0" data-track-index="7"><span>Payouts wait: the pot is still empty</span></div>
+      <div class="callout clip" id="c06a" style="right: 64px; top: 150px;" data-start="65.37" data-duration="5.0" data-track-index="7"><span>Offline checkout simulator, clearly labelled</span></div>
+      <div class="callout clip" id="c06b" style="right: 64px; top: 150px;" data-start="71.57" data-duration="6.4" data-track-index="7"><span>Captured once &middot; webhook updates the ledger live</span></div>
+      <div class="callout clip" id="c08a" style="right: 64px; top: 150px;" data-start="107.17" data-duration="3.8" data-track-index="7"><span>Payouts v1 &middot; Jonah reimbursed, under the limit</span></div>
+      <div class="callout clip" id="c08b" style="right: 64px; top: 228px;" data-start="108.17" data-duration="2.8" data-track-index="7"><span>Maya&rsquo;s $1,248.50: above the limit, one click</span></div>
+      <div class="callout clip" id="c09a" style="right: 64px; top: 150px;" data-start="120.37" data-duration="3.6" data-track-index="7"><span>Refund on Kofi's capture &middot; others re-asked, to the cent</span></div>
+      <div class="callout clip" id="c10a" style="right: 64px; top: 150px;" data-start="126.97" data-duration="4.6" data-track-index="7"><span>Plain English &rarr; AG Grid filter + sort</span></div>
+
+      <audio id="mix" src="assets/mix.wav" data-start="0" data-duration="142.87" data-track-index="10" data-volume="1"></audio>
+
+      <div class="cap clip" id="cap0" data-start="0.54" data-duration="1.93" data-track-index="9"><span>Every group trip has a treasurer.</span></div>
+      <div class="cap clip" id="cap1" data-start="2.75" data-duration="1.7" data-track-index="9"><span>They put the cabin on their own card,</span></div>
+      <div class="cap clip" id="cap2" data-start="4.54" data-duration="1.73" data-track-index="9"><span>chase eight friends for their share,</span></div>
+      <div class="cap clip" id="cap3" data-start="6.36" data-duration="1.1" data-track-index="9"><span>pay the boat rental,</span></div>
+      <div class="cap clip" id="cap4" data-start="7.62" data-duration="1.51" data-track-index="9"><span>and work out what the friend who dropped</span></div>
+      <div class="cap clip" id="cap5" data-start="9.13" data-duration="0.94" data-track-index="9"><span>out gets back.</span></div>
+      <div class="cap clip" id="cap6" data-start="11.42" data-duration="2.35" data-track-index="9"><span>Purser is an agent that does that job</span></div>
+      <div class="cap clip" id="cap7" data-start="13.78" data-duration="2.04" data-track-index="9"><span>through PayPal. The difference:</span></div>
+      <div class="cap clip" id="cap8" data-start="16.07" data-duration="1.52" data-track-index="9"><span>it can only do what the ledger says</span></div>
+      <div class="cap clip" id="cap9" data-start="17.59" data-duration="0.61" data-track-index="9"><span>is owed.</span></div>
+      <div class="cap clip" id="cap10" data-start="19.52" data-duration="1.43" data-track-index="9"><span>You describe the trip the way you would</span></div>
+      <div class="cap clip" id="cap11" data-start="20.95" data-duration="0.92" data-track-index="9"><span>in the group chat.</span></div>
+      <div class="cap clip" id="cap12" data-start="22.15" data-duration="1.79" data-track-index="9"><span>Gemini reads it into a ledger:</span></div>
+      <div class="cap clip" id="cap13" data-start="24.34" data-duration="1.94" data-track-index="9"><span>who is coming, who already paid for</span></div>
+      <div class="cap clip" id="cap14" data-start="26.28" data-duration="2.42" data-track-index="9"><span>what, the boat company still to be paid,</span></div>
+      <div class="cap clip" id="cap15" data-start="29.0" data-duration="2.63" data-track-index="9"><span>and the sponsor. Every name it returns</span></div>
+      <div class="cap clip" id="cap16" data-start="31.64" data-duration="1.42" data-track-index="9"><span>has to appear in the brief.</span></div>
+      <div class="cap clip" id="cap17" data-start="36.52" data-duration="1.36" data-track-index="9"><span>Then the treasurer runs,</span></div>
+      <div class="cap clip" id="cap18" data-start="37.99" data-duration="2.47" data-track-index="9"><span>live, on the PayPal sandbox,</span></div>
+      <div class="cap clip" id="cap19" data-start="40.49" data-duration="1.75" data-track-index="9"><span>through the PayPal Agent Toolkit.</span></div>
+      <div class="cap clip" id="cap20" data-start="42.51" data-duration="1.73" data-track-index="9"><span>One order per person for their exact</span></div>
+      <div class="cap clip" id="cap21" data-start="44.24" data-duration="2.35" data-track-index="9"><span>share, an invoice to the sponsor,</span></div>
+      <div class="cap clip" id="cap22" data-start="46.7" data-duration="1.98" data-track-index="9"><span>sent. Reimbursements wait,</span></div>
+      <div class="cap clip" id="cap23" data-start="48.8" data-duration="2.25" data-track-index="9"><span>because the pot is still empty.</span></div>
+      <div class="cap clip" id="cap24" data-start="54.53" data-duration="1.65" data-track-index="9"><span>Priya opens her personal link,</span></div>
+      <div class="cap clip" id="cap25" data-start="56.45" data-duration="2.08" data-track-index="9"><span>sees exactly what she is paying for,</span></div>
+      <div class="cap clip" id="cap26" data-start="58.83" data-duration="2.28" data-track-index="9"><span>and goes straight to PayPal&#x27;s own sandbox</span></div>
+      <div class="cap clip" id="cap27" data-start="61.11" data-duration="0.65" data-track-index="9"><span>checkout.</span></div>
+      <div class="cap clip" id="cap28" data-start="63.5" data-duration="1.52" data-track-index="9"><span>In the no-keys demo mode,</span></div>
+      <div class="cap clip" id="cap29" data-start="65.26" data-duration="1.91" data-track-index="9"><span>a labelled checkout simulator plays</span></div>
+      <div class="cap clip" id="cap30" data-start="67.17" data-duration="2.63" data-track-index="9"><span>PayPal&#x27;s part. Priya approves,</span></div>
+      <div class="cap clip" id="cap31" data-start="69.91" data-duration="2.57" data-track-index="9"><span>the payment is captured exactly once,</span></div>
+      <div class="cap clip" id="cap32" data-start="72.72" data-duration="1.64" data-track-index="9"><span>and when Sam pays from his phone,</span></div>
+      <div class="cap clip" id="cap33" data-start="74.55" data-duration="2.14" data-track-index="9"><span>the organizer&#x27;s ledger updates live.</span></div>
+      <div class="cap clip" id="cap34" data-start="78.52" data-duration="1.95" data-track-index="9"><span>Every money move is checked in plain</span></div>
+      <div class="cap clip" id="cap35" data-start="80.47" data-duration="2.04" data-track-index="9"><span>code before it reaches PayPal.</span></div>
+      <div class="cap clip" id="cap36" data-start="82.79" data-duration="2.56" data-track-index="9"><span>Here a rogue model tries to pay a stranger,</span></div>
+      <div class="cap clip" id="cap37" data-start="85.61" data-duration="1.2" data-track-index="9"><span>overcharge Priya,</span></div>
+      <div class="cap clip" id="cap38" data-start="87.09" data-duration="1.9" data-track-index="9"><span>and pay out money that has not arrived.</span></div>
+      <div class="cap clip" id="cap39" data-start="89.25" data-duration="1.49" data-track-index="9"><span>All three are denied,</span></div>
+      <div class="cap clip" id="cap40" data-start="91.06" data-duration="1.63" data-track-index="9"><span>and the reason goes back to the model</span></div>
+      <div class="cap clip" id="cap41" data-start="92.78" data-duration="1.49" data-track-index="9"><span>so it can correct itself.</span></div>
+      <div class="cap clip" id="cap42" data-start="98.52" data-duration="1.13" data-track-index="9"><span>Once the money is in,</span></div>
+      <div class="cap clip" id="cap43" data-start="99.74" data-duration="2.46" data-track-index="9"><span>Jonah&#x27;s groceries are paid back automatically</span></div>
+      <div class="cap clip" id="cap44" data-start="102.2" data-duration="1.41" data-track-index="9"><span>with PayPal Payouts.</span></div>
+      <div class="cap clip" id="cap45" data-start="103.87" data-duration="2.06" data-track-index="9"><span>Maya&#x27;s cabin reimbursement is above</span></div>
+      <div class="cap clip" id="cap46" data-start="105.93" data-duration="2.4" data-track-index="9"><span>the limit, so it waits for one click.</span></div>
+      <div class="cap clip" id="cap47" data-start="111.52" data-duration="1.06" data-track-index="9"><span>Kofi can&#x27;t make it.</span></div>
+      <div class="cap clip" id="cap48" data-start="112.86" data-duration="1.73" data-track-index="9"><span>He keeps his share of the non-refundable</span></div>
+      <div class="cap clip" id="cap49" data-start="114.59" data-duration="2.62" data-track-index="9"><span>cabin, the rest is refunded on the payment</span></div>
+      <div class="cap clip" id="cap50" data-start="117.22" data-duration="2.27" data-track-index="9"><span>he made, and everyone else is asked</span></div>
+      <div class="cap clip" id="cap51" data-start="119.48" data-duration="0.89" data-track-index="9"><span>for the difference,</span></div>
+      <div class="cap clip" id="cap52" data-start="120.45" data-duration="0.77" data-track-index="9"><span>to the cent.</span></div>
+      <div class="cap clip" id="cap53" data-start="124.52" data-duration="2.64" data-track-index="9"><span>Ask the ledger anything in plain English.</span></div>
+      <div class="cap clip" id="cap54" data-start="127.42" data-duration="2.84" data-track-index="9"><span>Every PayPal object and every decision</span></div>
+      <div class="cap clip" id="cap55" data-start="130.3" data-duration="0.77" data-track-index="9"><span>is on the record.</span></div>
+      <div class="cap clip" id="cap56" data-start="135.52" data-duration="2.1" data-track-index="9"><span>Purser. The treasurer you can trust</span></div>
+      <div class="cap clip" id="cap57" data-start="137.61" data-duration="0.84" data-track-index="9"><span>with the trip money.</span></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const E = "power3.out";
+      const S = {"s01_open": 0.0, "s02_home": 10.86, "s03_brief": 18.97, "s04_run": 35.97, "s05_paypal": 53.97, "s06_paid": 62.97, "s07_mandate": 77.97, "s08_payouts": 97.97, "s09_dropout": 110.97, "s10_ask": 123.97, "s11_end": 134.97};
+      const D = {"s01_open": 10.86, "s02_home": 8.1, "s03_brief": 17, "s04_run": 18, "s05_paypal": 9, "s06_paid": 15, "s07_mandate": 20, "s08_payouts": 13, "s09_dropout": 13, "s10_ask": 11, "s11_end": 7.9};
+      // open
+      tl.fromTo("#open-img", { scale: 1.0 }, { scale: 1.08, duration: D.s01_open, ease: "none" }, 0);
+      tl.fromTo("#open-eb", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 0.3);
+      tl.fromTo("#open-h", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 0.6);
+      tl.fromTo("#open-sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 1.3);
+      [["#oi1", 2.6], ["#oi2", 4.2], ["#oi3", 6.3], ["#oi4", 7.9]].forEach(([s, t]) =>
+        tl.fromTo(s, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, t));
+      // app windows rise in
+      ["s02_home", "s03_brief", "s04_run", "s05_paypal", "s06_paid", "s08_payouts", "s09_dropout", "s10_ask"].forEach((k) => {
+        tl.fromTo(`#${k}-win`, { opacity: 0, y: 26, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: E }, S[k]);
+        tl.fromTo(`#${k}-badge span`, { opacity: 0 }, { opacity: 1, duration: 0.5 }, S[k] + 0.3);
+      });
+      // a slow push into the trace while the treasurer runs
+      tl.to("#s04_run-win", { scale: 1.04, x: -30, duration: D.s04_run - 1, ease: "power1.inOut" }, S.s04_run + 0.8);
+      // punch in on the narrow pay pages, back out for the full ledger
+      tl.to("#s05_paypal-win", { scale: 1.24, y: 40, duration: 1.2, ease: "power2.inOut" }, S.s05_paypal + 0.7);
+      tl.to("#s05_paypal-win", { scale: 1.0, y: 0, duration: 0.6, ease: "power2.inOut" }, S.s05_paypal + 2.4);
+      tl.to("#s05_paypal-win", { scale: 1.22, y: 30, duration: 1.4, ease: "power2.inOut" }, S.s05_paypal + 3.6);
+      tl.to("#s06_paid-win", { scale: 1.24, y: 50, duration: 1.2, ease: "power2.inOut" }, S.s06_paid + 0.6);
+      tl.to("#s06_paid-win", { scale: 1.0, y: 0, duration: 0.7, ease: "power2.inOut" }, S.s06_paid + 7.6 - 0.5);
+      // callouts
+      document.querySelectorAll(".callout span").forEach((el) => {
+        const s = parseFloat(el.parentElement.dataset.start);
+        tl.fromTo(el, { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.45, ease: E }, s);
+      });
+      // mandate
+      tl.fromTo("#m-eb", { opacity: 0 }, { opacity: 1, duration: 0.5 }, S.s07_mandate + 0.2);
+      tl.fromTo("#m-h", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.7, ease: E }, S.s07_mandate + 0.4);
+      tl.fromTo("#term", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7, ease: E }, S.s07_mandate + 1.0);
+      [["#r1", 3.0], ["#r2", 5.2], ["#r3", 7.6], ["#r4", 9.6]].forEach(([s, t]) =>
+        tl.fromTo(s, { opacity: 0, x: -18 }, { opacity: 1, x: 0, duration: 0.55, ease: E }, S.s07_mandate + t));
+      const tls = Array.from(document.querySelectorAll(".tl"));
+      tls.forEach((el, k) => tl.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, S.s07_mandate + 8.4 + k * 1.35));
+      tl.fromTo("#m-src", { opacity: 0 }, { opacity: 1, duration: 0.6 }, S.s07_mandate + 14.5);
+      // end
+      tl.fromTo("#end-img", { scale: 1.06 }, { scale: 1.0, duration: D.s11_end, ease: "none" }, S.s11_end);
+      tl.fromTo("#end-mark", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, S.s11_end + 0.3);
+      tl.fromTo("#end-tag", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, S.s11_end + 1.1);
+      tl.fromTo(["#end-stack", "#end-by"], { opacity: 0 }, { opacity: 1, duration: 0.8, stagger: 0.4 }, S.s11_end + 2.4);
+      // captions
+      document.querySelectorAll(".cap span").forEach((el) => {
+        const s = parseFloat(el.parentElement.dataset.start);
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.15 }, s);
+      });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

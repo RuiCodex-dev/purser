@@ -36,6 +36,8 @@ places presented as real, logos or text.
 
 ## Video
 
+Narration: Microsoft Edge neural text-to-speech (`en-US-AndrewMultilingualNeural`). Music:
+an original bed synthesised in code by `video/make_audio.py`, owned by Rui Codex.
 See `video/README.md`: real captures of the running app, motion graphics written in
 HyperFrames, narration from Microsoft Edge neural text-to-speech, and music synthesised in
 code for this video (no third-party music).
@@ -44,4 +46,5 @@ code for this video (no third-party music).
 
 PayPal is a trademark of PayPal, Inc. Purser is an independent hackathon project and is not
 affiliated with or endorsed by PayPal. The PayPal name is used only to describe the
-integration; no PayPal logo is reproduced.
+integration; no PayPal logo is reproduced in our own artwork. The demo video and one
+gallery image show PayPal's own sandbox checkout page, as the integration's real behaviour.

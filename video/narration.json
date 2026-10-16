@@ -1,0 +1,18 @@
+{
+  "voice": "en-US-AndrewMultilingualNeural",
+  "rate": "+2%",
+  "gap": 0.55,
+  "scenes": [
+    { "id": "s01_open", "min": 9.5, "text": "Every group trip has a treasurer. They put the cabin on their own card, chase eight friends for their share, pay the boat rental, and work out what the friend who dropped out gets back." },
+    { "id": "s02_home", "min": 7, "text": "Purser is an agent that does that job through PayPal. The difference: it can only do what the ledger says is owed." },
+    { "id": "s03_brief", "min": 17, "text": "You describe the trip the way you would in the group chat. Gemini reads it into a ledger: who is coming, who already paid for what, the boat company still to be paid, and the sponsor. Every name it returns has to appear in the brief." },
+    { "id": "s04_run", "min": 18, "text": "Then the treasurer runs, live, on the PayPal sandbox, through the PayPal Agent Toolkit. One order per person for their exact share, an invoice to the sponsor, sent. Reimbursements wait, because the pot is still empty." },
+    { "id": "s05_paypal", "min": 9, "text": "Priya opens her personal link, sees exactly what she is paying for, and goes straight to PayPal's own sandbox checkout." },
+    { "id": "s06_paid", "min": 15, "text": "In the no-keys demo mode, a labelled checkout simulator plays PayPal's part. Priya approves, the payment is captured exactly once, and when Sam pays from his phone, the organizer's ledger updates live." },
+    { "id": "s07_mandate", "min": 20, "text": "Every money move is checked in plain code before it reaches PayPal. Here a rogue model tries to pay a stranger, overcharge Priya, and pay out money that has not arrived. All three are denied, and the reason goes back to the model so it can correct itself." },
+    { "id": "s08_payouts", "min": 13, "text": "Once the money is in, Jonah's groceries are paid back automatically with PayPal Payouts. Maya's cabin reimbursement is above the limit, so it waits for one click." },
+    { "id": "s09_dropout", "min": 13, "text": "Kofi can't make it. He keeps his share of the non-refundable cabin, the rest is refunded on the payment he made, and everyone else is asked for the difference, to the cent." },
+    { "id": "s10_ask", "min": 11, "text": "Ask the ledger anything in plain English. Every PayPal object and every decision is on the record." },
+    { "id": "s11_end", "min": 7.5, "text": "Purser. The treasurer you can trust with the trip money." }
+  ]
+}

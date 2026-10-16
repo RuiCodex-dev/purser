@@ -9,24 +9,35 @@
   the project working, no third-party copyrighted music.
 - Every publish, upload and submit step below needs the owner's separate approval.
 
-## 0. Owner: PayPal sandbox (blocks live evidence, not the submission)
+## Status 2026-10-16 (RUI-219)
 
-- [ ] Sign in at https://developer.paypal.com/dashboard/ (existing account, info@ruicodex.com)
-      and follow `docs/SANDBOX_SETUP.md` (create the sandbox app "Purser", tick Invoicing and
-      Payouts, note the sandbox personal account).
-- [ ] Put the Client ID and Secret in `C:\Users\Admin\.ruicodex-keys\purser.env.json`
-      (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`) - never in the repo. An agent can then run
-      `scripts/sandbox-check.ts`, the live flow in the app, and re-shoot captures in live mode.
+- Sandbox app exists; keys in `C:/Users/Admin/.ruicodex-keys/purser.env.json`. Live checks:
+  28/28 (`scripts/live-e2e.ts`, `docs/sandbox-evidence/e2e-phase1-*.json`).
+- 25/25 offline tests; clean `npm ci` + build + typecheck; gitleaks over the full history: no
+  leaks; author/committer on every commit is the GitHub noreply identity.
+- Video rendered: `video/purser-demo.mp4` + `video/purser-demo.en.srt` (upload text in
+  `video/YOUTUBE.md`).
+- Devpost **draft** created and filled (not submitted):
+  https://devpost.com/submit-to/31302-paypal-ai-hackathon/manage/submissions/1240493-purser/project-overview
+- QA record: `qa/QA-2026-10-16.md`.
+
+## 0. Owner: optional, finishes the live evidence
+
+- [ ] Phase 2 of the live run needs one sandbox buyer payment: start Purser live, open two
+      participants' pay links, log in as the sandbox personal account
+      (sb-oohr853374521@personal.example.com; its password is shown only in the developer
+      dashboard > Testing Tools > Sandbox Accounts) and pay; then
+      `node scripts/live-e2e.ts --continue <event id>` checks captures, idempotent re-capture
+      and the drop-out refund in the sandbox. Alternatively put the sandbox buyer password in
+      the keys file and an agent can do it.
 
 ## 1. Before any publish
 
-- [ ] `npm ci && npm run build && npm test` passes (16 tests).
-- [ ] `PURSER_SECRETS_FILE=C:/Users/Admin/.ruicodex-keys/purser.env.json npm run secret-scan`
-      reports 0 findings (checks every file git would publish, plus the literal key values).
-- [ ] `git log -p | findstr /i "AIza A21AA client_secret"` shows nothing but code.
-- [ ] `data/`, `.env`, `design/gen/`, `video/work/` and rendered MP4s are git-ignored
-      (`git ls-files data design/gen video/work` prints nothing).
-- [ ] Live sandbox evidence committed in `docs/sandbox-evidence/` (ids and debug ids only).
+- [x] `npm ci && npm run build && npm test` passes (25 tests).
+- [x] Secret scan clean (`npm run secret-scan` + gitleaks over the full history).
+- [x] `data/`, `qa/run-data-*`, `.env`, `design/gen/`, `video/work/`, `video/hyperframes/assets/clips/`,
+      `video/hyperframes/assets/mix.wav` and rendered MP4s are git-ignored.
+- [x] Commit author is `Selman Altinay <88661900+altinayselman@users.noreply.github.com>`.
 
 ## 2. Publish the repository (owner approval A)
 
@@ -40,13 +51,13 @@ GitHub detects `LICENSE` (MIT) and shows it in the About panel, as the rules req
 
 ## 3. Video (owner approval B for the YouTube upload)
 
-- [ ] Build and render per `video/SCRIPT.md` (HyperFrames, deferred to after 2026-10-20).
+- [x] Built and rendered with HyperFrames (`video/README.md`).
 - [ ] Watch it once end to end: under 3:00, no key fields or secrets on screen, music is
       our own, captions readable.
 - [ ] Upload to YouTube **public** (not unlisted), title "Purser - the AI treasurer for group
       events (PayPal AI Hackathon)", description from `DEVPOST.md` first paragraph + repo link.
 
-## 4. Optional hosted demo (owner approval C)
+## 4. Optional hosted demo (owner approval C) - plan in `docs/HOSTING_PLAN.md`
 
 Not required: the rules accept run instructions, and Purser runs with no keys. If wanted,
 the `Dockerfile` runs as-is behind any reverse proxy (`PUBLIC_BASE_URL` must be the public

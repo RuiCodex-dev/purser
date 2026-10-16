@@ -21,10 +21,13 @@ export const gridTheme = themeQuartz.withParams({
   wrapperBorder: false,
   wrapperBorderRadius: 0,
   spacing: 7,
-  cellHorizontalPadding: 14,
+  cellHorizontalPadding: 10,
 });
 
 const usd = (cur: string) => (p: { value: number | null | undefined }) => (p.value === null || p.value === undefined ? "" : money(Math.round(p.value * 100), cur));
+
+/** Shorter display labels so the chip fits; the grid filters on the full value. */
+const STATE_LABEL: Record<string, string> = { "owed reimbursement": "to reimburse", "owed refund": "to refund" };
 
 const STATE_CLASS: Record<string, string> = {
   settled: "settled",
@@ -58,7 +61,7 @@ function Position(p: ICellRendererParams) {
 
 function StateChip(p: ICellRendererParams) {
   if (p.node.rowPinned || !p.value) return null;
-  return <span className={`chip ${STATE_CLASS[p.value] ?? "neutral"}`}>{p.value}</span>;
+  return <span className={`chip ${STATE_CLASS[p.value] ?? "neutral"}`}>{STATE_LABEL[p.value] ?? p.value}</span>;
 }
 
 function Actions(p: ICellRendererParams) {
@@ -119,25 +122,25 @@ export const LedgerGrid = forwardRef<LedgerGridHandle, { view: EventView; copyLi
   }, [rows]);
   const cols = useMemo<ColDef[]>(
     () => [
-      { field: "name", headerName: "Person", cellRenderer: Person, filter: "agTextColumnFilter", minWidth: 136, flex: 1.4 },
+      { field: "name", headerName: "Person", cellRenderer: Person, filter: "agTextColumnFilter", minWidth: 128, flex: 1.4 },
       { field: "role", hide: true, filter: "agTextColumnFilter" },
       { field: "status", hide: true, filter: "agTextColumnFilter" },
-      { field: "share", headerName: "Share", valueFormatter: usd(cur), type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 90, flex: 1 },
+      { field: "share", headerName: "Share", valueFormatter: usd(cur), type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 92, flex: 1 },
       {
         field: "credits",
         headerName: "Credits",
         valueFormatter: usd(cur),
         type: "numericColumn",
-        minWidth: 90,
+        minWidth: 92,
         flex: 1,
         tooltipValueGetter: (p) => (p.data?.id === "total" ? "" : `Fronted ${money(Math.round(p.data.fronted * 100), cur)} + sponsor ${money(Math.round(p.data.credit * 100), cur)}`),
       },
       { field: "fronted", hide: true, filter: "agNumberColumnFilter" },
-      { field: "paid", headerName: "Paid in", valueFormatter: usd(cur), type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 88, flex: 1 },
-      { field: "received", headerName: "Paid out", valueFormatter: usd(cur), type: "numericColumn", enableCellChangeFlash: true, minWidth: 88, flex: 1 },
-      { field: "position", headerName: "Position", cellRenderer: Position, type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 158, flex: 1.4 },
-      { field: "state", headerName: "State", cellRenderer: StateChip, filter: "agTextColumnFilter", minWidth: 178, flex: 1.5, enableCellChangeFlash: true, tooltipValueGetter: (p) => (p.data?.order ? `PayPal order ${p.data.order.id}: ${p.data.order.status}` : "") },
-      { colId: "actions", headerName: "", cellRenderer: Actions, width: 100, sortable: false, resizable: false },
+      { field: "paid", headerName: "Paid in", valueFormatter: usd(cur), type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 92, flex: 1 },
+      { field: "received", headerName: "Paid out", valueFormatter: usd(cur), type: "numericColumn", enableCellChangeFlash: true, minWidth: 92, flex: 1 },
+      { field: "position", headerName: "Position", cellRenderer: Position, type: "numericColumn", filter: "agNumberColumnFilter", enableCellChangeFlash: true, minWidth: 138, flex: 1.3 },
+      { field: "state", headerName: "State", cellRenderer: StateChip, filter: "agTextColumnFilter", minWidth: 132, flex: 1.3, enableCellChangeFlash: true, tooltipValueGetter: (p) => (p.data?.order ? `PayPal order ${p.data.order.id}: ${p.data.order.status}` : "") },
+      { colId: "actions", headerName: "", cellRenderer: Actions, width: 96, sortable: false, resizable: false },
     ],
     [cur],
   );

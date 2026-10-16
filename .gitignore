@@ -16,3 +16,6 @@ qa/run-data/
 qa/rec/
 qa/run-data-*/
 qa/shots/
+video/hyperframes/assets/mix.wav
+video/hyperframes/.hyperframes/
+video/hyperframes/node_modules/

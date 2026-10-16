@@ -32,9 +32,19 @@ Shared style suffix appended to every prompt:
 | `cabin` | Cabin table set for eight, lantern, blank map, lake window | 4:3 | `330e1d3e-..._3.jpg` (variant 1) | New-event screen, video |
 | `kayaks` | Four kayaks crossing a still lake from above | 16:9 | `b78b7059-..._1.jpg` (variant 3; variant 2 rejected for a stray third ink) | Video (optional extras scene) |
 | `jetty` | Jetty with rope, cleat, duffel, paddles, moored boat | 1:1 | `de7d4bd3-..._2.jpg` (variant 2) | Video (vendor payout scene), Devpost gallery |
-| `purse`, `tall` | Leather purse and compass still life; tall pines at dawn | 16:9, 9:16 | generated, not yet reviewed | Candidates for the video teaser |
+| `purse` | Leather purse, compass, rope and keys still life | 16:9 | `389b39a9-..._1.jpg` (variant 1 of 3), copied to `design/devpost/src/purse.jpg` | Devpost cover and thumbnail (blended onto paper, edge-masked in CSS) |
+| `tall` | Tall pines at dawn | 9:16 | generated, not used | - |
 
 ## Text and code
 
 - The app's runtime AI (Gemini) is described in README "AI tools used".
 - Code and documents were written with Claude Code as a pair-programming assistant.
+
+## Devpost images and video (2026-10-16)
+
+- `design/devpost/out/*.jpg` (gallery, thumbnail) are composed in HTML by
+  `design/devpost/make_gallery.py`: real frames of the running app (`design/devpost/src/`,
+  extracted from the screen recordings), real script output, real typography, and the `purse`
+  art above. No new image generation was needed.
+- The demo video uses only the existing `hero-wide` and `cabin` art as mood; everything else is
+  screen recording and typography. No Veo or other generated video.

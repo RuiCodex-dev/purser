@@ -8,8 +8,8 @@ optional hosted demo URL).
 - **Tagline (max ~60 chars):** The AI treasurer for group trips, with a mandate it can't break
 - **Built by:** Rui Codex (solo)
 - **Repository:** TODO (public GitHub repo, MIT licence)
-- **Demo video:** TODO (YouTube, public, under 3 minutes)
-- **Hosted demo:** none required; full run instructions in the README (works with no keys)
+- **Demo video:** TODO (YouTube, public, 2:23; file `video/purser-demo.mp4`, captions `video/purser-demo.en.srt`)
+- **Hosted demo:** optional (plan in `docs/HOSTING_PLAN.md`, needs approval); full run instructions in the README (works with no keys)
 - **Try it out links:** repository URL
 - **Built with (tags):** paypal, paypal-agent-toolkit, paypal-orders, paypal-payouts,
   paypal-invoicing, paypal-webhooks, gemini, ag-grid, react, typescript, node.js
@@ -95,6 +95,15 @@ from a photo, and Purser drafts friendly reminders that never lose the amount or
   the brief itself, or the strict parser takes over.
 - **Exactly-once capture.** The return URL, the webhook and the reconcile job can all try to
   capture the same order. A per-order lock plus PayPal-Request-Id makes it happen once.
+- **The unhappy paths.** Deep testing against the live sandbox found real gaps, all fixed:
+  a double click could pay the same reimbursement twice (money moves are now serialised per
+  event and the mandate is re-evaluated under the lock); a card declined at capture
+  (`INSTRUMENT_DECLINED`, whose code PayPal puts in `details[].issue`, not in the message)
+  left the payer stuck (they now go back to PayPal's approval page for the same order); a
+  payer approving an older, replaced request could have been charged the old amount (a
+  superseded approval is now never captured); a network failure or an expired OAuth token
+  surfaced as a server error (now an audited failure, and a single token refresh with the
+  same PayPal-Request-Id).
 - **Drop-out maths.** A person who leaves keeps their share of non-refundable costs, loses
   the sponsor credit, is refunded the rest on the original capture, and everybody else is
   re-asked for the difference - and it all has to add up to the cent.
@@ -103,8 +112,11 @@ from a photo, and Purser drafts friendly reminders that never lose the amount or
 
 - An agent that can actually move money, with a guarantee that fits in one sentence: it can
   only ever do what the ledger already says is owed.
-- 16 tests including the full flow over HTTP and the rogue-model test; the conservation
-  invariant (what people owe plus sponsor money equals every unpaid cost) holds exactly.
+- 25 offline tests (full flow over HTTP, the rogue model, double submits, a declined card,
+  a replaced request, network failure, token expiry) plus a 28-check live end-to-end run
+  against the PayPal sandbox and Gemini (`scripts/live-e2e.ts`, evidence in
+  `docs/sandbox-evidence/`). The conservation invariant (what people owe plus sponsor money
+  equals every unpaid cost) holds exactly.
 - It runs end to end with zero keys, which makes it easy to judge and to try.
 
 ## What we learned
@@ -141,7 +153,8 @@ Open http://localhost:8790 > New event > Skip to the demo event > Run the treasu
 person's pay link from the ledger (link icon), pay, approve in the checkout simulator, and
 watch the ledger update. With `PAYPAL_CLIENT_ID`/`PAYPAL_CLIENT_SECRET` (sandbox) and
 `GEMINI_API_KEY` in `.env`, the same flow runs against the real PayPal sandbox and Gemini.
-`npm test` runs the suite offline.
+`npm test` runs the suite offline (25 tests). With sandbox credentials,
+`node scripts/live-e2e.ts` runs 28 live checks against the PayPal sandbox and Gemini.
 
 ## Sponsor tools
 

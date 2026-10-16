@@ -1,0 +1,232 @@
+1
+00:00:00,536 --> 00:00:02,469
+Every group trip has a treasurer.
+
+2
+00:00:02,754 --> 00:00:04,455
+They put the cabin on their own card,
+
+3
+00:00:04,543 --> 00:00:06,269
+chase eight friends for their share,
+
+4
+00:00:06,357 --> 00:00:07,457
+pay the boat rental,
+
+5
+00:00:07,619 --> 00:00:09,126
+and work out what the friend who dropped
+
+6
+00:00:09,126 --> 00:00:10,068
+out gets back.
+
+7
+00:00:11,424 --> 00:00:13,774
+Purser is an agent that does that job
+
+8
+00:00:13,777 --> 00:00:15,821
+through PayPal. The difference:
+
+9
+00:00:16,069 --> 00:00:17,588
+it can only do what the ledger says
+
+10
+00:00:17,588 --> 00:00:18,198
+is owed.
+
+11
+00:00:19,516 --> 00:00:20,950
+You describe the trip the way you would
+
+12
+00:00:20,950 --> 00:00:21,866
+in the group chat.
+
+13
+00:00:22,151 --> 00:00:23,938
+Gemini reads it into a ledger:
+
+14
+00:00:24,344 --> 00:00:26,281
+who is coming, who already paid for
+
+15
+00:00:26,281 --> 00:00:28,704
+what, the boat company still to be paid,
+
+16
+00:00:29,001 --> 00:00:31,636
+and the sponsor. Every name it returns
+
+17
+00:00:31,636 --> 00:00:33,055
+has to appear in the brief.
+
+18
+00:00:36,516 --> 00:00:37,874
+Then the treasurer runs,
+
+19
+00:00:37,987 --> 00:00:40,459
+live, on the PayPal sandbox,
+
+20
+00:00:40,487 --> 00:00:42,236
+through the PayPal Agent Toolkit.
+
+21
+00:00:42,509 --> 00:00:44,237
+One order per person for their exact
+
+22
+00:00:44,237 --> 00:00:46,587
+share, an invoice to the sponsor,
+
+23
+00:00:46,700 --> 00:00:48,682
+sent. Reimbursements wait,
+
+24
+00:00:48,795 --> 00:00:51,047
+because the pot is still empty.
+
+25
+00:00:54,528 --> 00:00:56,180
+Priya opens her personal link,
+
+26
+00:00:56,452 --> 00:00:58,533
+sees exactly what she is paying for,
+
+27
+00:00:58,830 --> 00:01:01,109
+and goes straight to PayPal's own sandbox
+
+28
+00:01:01,109 --> 00:01:01,756
+checkout.
+
+29
+00:01:03,504 --> 00:01:05,021
+In the no-keys demo mode,
+
+30
+00:01:05,256 --> 00:01:07,168
+a labelled checkout simulator plays
+
+31
+00:01:07,168 --> 00:01:09,800
+PayPal's part. Priya approves,
+
+32
+00:01:09,913 --> 00:01:12,484
+the payment is captured exactly once,
+
+33
+00:01:12,719 --> 00:01:14,359
+and when Sam pays from his phone,
+
+34
+00:01:14,545 --> 00:01:16,687
+the organizer's ledger updates live.
+
+35
+00:01:18,516 --> 00:01:20,465
+Every money move is checked in plain
+
+36
+00:01:20,465 --> 00:01:22,508
+code before it reaches PayPal.
+
+37
+00:01:22,793 --> 00:01:25,352
+Here a rogue model tries to pay a stranger,
+
+38
+00:01:25,612 --> 00:01:26,810
+overcharge Priya,
+
+39
+00:01:27,094 --> 00:01:28,992
+and pay out money that has not arrived.
+
+40
+00:01:29,251 --> 00:01:30,743
+All three are denied,
+
+41
+00:01:31,065 --> 00:01:32,693
+and the reason goes back to the model
+
+42
+00:01:32,781 --> 00:01:34,274
+so it can correct itself.
+
+43
+00:01:38,516 --> 00:01:39,641
+Once the money is in,
+
+44
+00:01:39,742 --> 00:01:42,205
+Jonah's groceries are paid back automatically
+
+45
+00:01:42,205 --> 00:01:43,612
+with PayPal Payouts.
+
+46
+00:01:43,871 --> 00:01:45,930
+Maya's cabin reimbursement is above
+
+47
+00:01:45,930 --> 00:01:48,330
+the limit, so it waits for one click.
+
+48
+00:01:51,516 --> 00:01:52,580
+Kofi can't make it.
+
+49
+00:01:52,864 --> 00:01:54,592
+He keeps his share of the non-refundable
+
+50
+00:01:54,592 --> 00:01:57,215
+cabin, the rest is refunded on the payment
+
+51
+00:01:57,215 --> 00:01:59,482
+he made, and everyone else is asked
+
+52
+00:01:59,482 --> 00:02:00,374
+for the difference,
+
+53
+00:02:00,450 --> 00:02:01,220
+to the cent.
+
+54
+00:02:04,516 --> 00:02:07,160
+Ask the ledger anything in plain English.
+
+55
+00:02:07,420 --> 00:02:10,261
+Every PayPal object and every decision
+
+56
+00:02:10,300 --> 00:02:11,069
+is on the record.
+
+57
+00:02:15,516 --> 00:02:17,612
+Purser. The treasurer you can trust
+
+58
+00:02:17,612 --> 00:02:18,455
+with the trip money.
+
