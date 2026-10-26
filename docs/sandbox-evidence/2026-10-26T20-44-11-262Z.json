@@ -1,0 +1,52 @@
+{
+  "environment": "PayPal sandbox",
+  "base": "https://api-m.sandbox.paypal.com",
+  "toolkit": "1.11.0",
+  "serverSdk": "1.1.0",
+  "evidence": [
+    {
+      "step": "SDK OrdersController.createOrder",
+      "ok": true,
+      "http": 200,
+      "debugId": "f5296535df8b5",
+      "error": null,
+      "order": "3BY0532708552860J",
+      "status": "PAYER_ACTION_REQUIRED",
+      "currency": "EUR",
+      "payerAction": true
+    },
+    {
+      "step": "SDK createOrder, same PayPal-Request-Id",
+      "ok": true,
+      "http": 200,
+      "debugId": "f7226177af512",
+      "error": null,
+      "sameOrder": true
+    },
+    {
+      "step": "SDK OrdersController.getOrder",
+      "ok": true,
+      "http": 200,
+      "debugId": "f2331994c9d75",
+      "error": null,
+      "status": "PAYER_ACTION_REQUIRED",
+      "value": "2.00"
+    },
+    {
+      "step": "SDK captureOrder, negative test",
+      "ok": true,
+      "http": 422,
+      "debugId": "f522097f7e059",
+      "error": "INSTRUMENT_DECLINED: The requested action could not be performed, semantically incorrect, or failed business validation.",
+      "issue": "INSTRUMENT_DECLINED"
+    },
+    {
+      "step": "SDK revoked token -> one retry",
+      "ok": true,
+      "http": 200,
+      "debugId": "f5867128bf757",
+      "error": null,
+      "status": "PAYER_ACTION_REQUIRED"
+    }
+  ]
+}

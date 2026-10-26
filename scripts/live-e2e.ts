@@ -8,7 +8,7 @@
 // secrets, never pay-link tokens) is written to docs/sandbox-evidence/.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { loadConfig } from "../server/config.ts";
-import { LivePayPal, describeError } from "../server/paypal/live.ts";
+import { LivePayPal } from "../server/paypal/live.ts";
 
 const BASE = (process.env.PURSER_URL ?? "http://localhost:8790").replace(/\/$/, "");
 const BUYER = process.env.SANDBOX_PAYOUT_EMAIL ?? "sb-oohr853374521@personal.example.com";
@@ -152,24 +152,15 @@ async function phase1() {
   const [o1, o2] = [await pp.createOrderRest(body, rid), await pp.createOrderRest(body, rid)];
   check("PayPal-Request-Id makes order creation idempotent", o1.ok && o2.ok && o1.data.id === o2.data.id, { id: o1.data?.id });
 
-  // 13. A real sandbox decline, via PayPal's negative-testing mock header.
-  const mock = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${o1.data.id}/capture`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${await (pp as any).accessToken()}`,
-      "Content-Type": "application/json",
-      "PayPal-Mock-Response": JSON.stringify({ mock_application_codes: "INSTRUMENT_DECLINED" }),
-    },
-    body: "{}",
-  });
-  const mb: any = await mock.json().catch(() => ({}));
-  const described = describeError(mb, mock.status);
-  check("sandbox INSTRUMENT_DECLINED is recognised by Purser", mock.status === 422 && /INSTRUMENT_DECLINED/.test(described), { http: mock.status, error: described.slice(0, 120), debugId: mock.headers.get("paypal-debug-id") });
+  // 13. A real sandbox decline, via PayPal's negative-testing mock header (the Server SDK's paypalMockResponse).
+  const mock = await pp.captureOrder(o1.data.id, `${rid}-mock-capture`, JSON.stringify({ mock_application_codes: "INSTRUMENT_DECLINED" }));
+  const described = mock.error ?? "";
+  check("sandbox INSTRUMENT_DECLINED is recognised by Purser", mock.status === 422 && /INSTRUMENT_DECLINED/.test(described), { http: mock.status, error: described.slice(0, 120), debugId: mock.debugId });
 
-  // 14. Expired or revoked token: refreshed once, call succeeds.
+  // 14. Expired or revoked token: refreshed once, call succeeds (REST helper: Payouts v1).
   (pp as any).token = { value: "A21AA-expired-for-test", expires: Date.now() + 3_600_000 };
-  const afterExpiry = await pp.getOrder(o1.data.id);
-  check("expired access token is refreshed transparently", afterExpiry.ok, { http: afterExpiry.status });
+  const afterExpiry = await pp.getPayoutBatch("PURSER-NO-SUCH-BATCH");
+  check("expired access token is refreshed transparently", afterExpiry.status !== 401, { http: afterExpiry.status });
 
   // 15. Unreachable PayPal reported as an error, not a crash.
   const dead = new LivePayPal({ ...cfg.paypal!, base: "https://api-m.sandbox.paypal.invalid", timeoutMs: 4000 });

@@ -32,7 +32,7 @@ export interface PayPalPort {
   readonly mode: "sandbox" | "fixtures";
   /** Executes a tool from the PayPal Agent Toolkit (by its toolkit name). */
   callTool(name: string, args: Record<string, unknown>, requestId?: string): Promise<CallResult>;
-  /** Orders v2 capture, with an idempotency key. */
+  /** Orders v2 capture, with an idempotency key (live: PayPal Server SDK). */
   captureOrder(orderId: string, requestId: string): Promise<CallResult>;
   getOrder(orderId: string): Promise<CallResult>;
   /** Orders v2 create, for currencies the toolkit's create_order does not accept. */
@@ -43,5 +43,6 @@ export interface PayPalPort {
   /** Webhooks v1 signature check. Returns "fixture" for simulated events. */
   verifyWebhook(headers: Record<string, string | undefined>, body: any): Promise<"SUCCESS" | "FAILURE" | "NO_WEBHOOK_ID">;
   /** Where buyers are sent to approve. In fixtures this is the local simulator. */
-  describe(): { mode: string; base: string; toolkitVersion: string };
+  /** serverSdkVersion is set when Orders v2 calls go through the PayPal Server SDK (live mode). */
+  describe(): { mode: string; base: string; toolkitVersion: string; serverSdkVersion?: string };
 }

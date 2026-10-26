@@ -182,7 +182,7 @@ export function createApp(cfg: Config, opts: { webRoot?: string } = {}): App {
 
     if (p === "/api/health" && method === "GET") {
       const d = pp.describe();
-      return json(res, 200, { ok: true, paypal: { mode: pp.mode, label: d.mode, toolkit: `@paypal/agent-toolkit ${d.toolkitVersion}`, webhookVerification: cfg.paypal?.webhookId ? "on" : "off" }, ai: { configured: llm.available, model: llm.available ? llm.model : null }, publicBase: cfg.publicBase });
+      return json(res, 200, { ok: true, paypal: { mode: pp.mode, label: d.mode, toolkit: `@paypal/agent-toolkit ${d.toolkitVersion}`, serverSdk: d.serverSdkVersion ? `@paypal/paypal-server-sdk ${d.serverSdkVersion}` : null, webhookVerification: cfg.paypal?.webhookId ? "on" : "off" }, ai: { configured: llm.available, model: llm.available ? llm.model : null }, publicBase: cfg.publicBase });
     }
 
     if (p === "/api/events" && method === "GET")

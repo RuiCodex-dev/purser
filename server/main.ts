@@ -7,7 +7,7 @@ const d = app.pp.describe();
 
 app.server.listen(cfg.port, cfg.host, () => {
   console.log(`Purser is running at ${cfg.publicBase}`);
-  console.log(`  PayPal: ${d.mode} via @paypal/agent-toolkit ${d.toolkitVersion}${cfg.paypal?.webhookId ? " (webhook verification on)" : ""}`);
+  console.log(`  PayPal: ${d.mode} via @paypal/agent-toolkit ${d.toolkitVersion}${d.serverSdkVersion ? ` + @paypal/paypal-server-sdk ${d.serverSdkVersion} (Orders v2)` : ""}${cfg.paypal?.webhookId ? " (webhook verification on)" : ""}`);
   console.log(`  AI:     ${app.llm.available ? `Gemini (${app.llm.model})` : "no model key - deterministic treasurer and offline parser"}`);
 });
 

@@ -111,6 +111,7 @@ export function App() {
             {health?.ai.configured ? `Gemini ${String(health.ai.model).replace("gemini-", "").replace(/-/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase())}` : "No model key: rules engine"}
           </span>
           <span style={{ fontSize: 11 }}>{health?.paypal.toolkit}</span>
+          {health?.paypal.serverSdk && <span style={{ fontSize: 11 }}>{health.paypal.serverSdk} (Orders v2)</span>}
         </div>
       </aside>
       <main className="main">

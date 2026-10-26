@@ -232,6 +232,7 @@ test("live adapter: an expired access token is refreshed once; an unreachable Pa
   let tokens = 0;
   let calls = 0;
   const seen: (string | undefined)[] = [];
+  const agents: (string | undefined)[] = [];
   const mock = createServer((req, res) => {
     const chunks: Buffer[] = [];
     req.on("data", (c) => chunks.push(c));
@@ -239,10 +240,11 @@ test("live adapter: an expired access token is refreshed once; an unreachable Pa
       if (req.url === "/v1/oauth2/token") {
         tokens++;
         res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ access_token: `T${tokens}`, expires_in: 32400 }));
+        return res.end(JSON.stringify({ access_token: `T${tokens}`, token_type: "Bearer", expires_in: 32400 }));
       }
       calls++;
       seen.push(req.headers["paypal-request-id"] as string | undefined);
+      agents.push(req.headers["user-agent"] as string | undefined);
       if (req.headers.authorization === "Bearer T1") {
         res.writeHead(401, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: "invalid_token", error_description: "Access Token not found in cache" }));
@@ -261,6 +263,7 @@ test("live adapter: an expired access token is refreshed once; an unreachable Pa
     assert.equal(tokens, 2, "token fetched again after the 401");
     assert.equal(calls, 2, "request retried exactly once");
     assert.deepEqual(seen, ["capture-ORDER1", "capture-ORDER1"], "the retry keeps the same PayPal-Request-Id");
+    assert.ok(agents.every((a) => /PayPal REST API TypeScript SDK/.test(a ?? "")), "Orders v2 calls are sent by the PayPal Server SDK");
   } finally {
     await new Promise<void>((r) => mock.close(() => r()));
   }

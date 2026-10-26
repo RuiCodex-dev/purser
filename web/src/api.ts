@@ -105,7 +105,7 @@ export interface EventView {
 }
 export interface Health {
   ok: boolean;
-  paypal: { mode: "sandbox" | "fixtures"; label: string; toolkit: string; webhookVerification: string };
+  paypal: { mode: "sandbox" | "fixtures"; label: string; toolkit: string; serverSdk: string | null; webhookVerification: string };
   ai: { configured: boolean; model: string | null };
   publicBase: string;
 }
